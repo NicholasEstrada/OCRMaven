@@ -11,7 +11,8 @@ public class LerImagem {
     public static void main(String[] args) throws IOException {
         File imageFile = new File("C:\\Users\\Nicholas\\Pictures\\images\\eurotext.tif");
         Tesseract tess4j = new Tesseract();
-        tess4j.setDatapath("C:\\Users\\Nicholas\\Downloads\\Tess4J-3.4.8-src\\Tess4J\\tessdata");
+        // tess path location 
+        tess4j.setDatapath("C:\\Users\\Nicholas\\eclipse-workspace\\OCRMaven\\tessdata");
         // tess4j.setLanguage("por");
         try {
             String result = tess4j.doOCR(imageFile);
