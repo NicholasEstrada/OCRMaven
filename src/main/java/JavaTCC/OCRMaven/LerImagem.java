@@ -24,9 +24,38 @@ public class LerImagem {
         }
     }
 
-	private static int procuraEmail(String result) {
+	private static String procuraEmail(String result) {
 		// TODO Auto-generated method stub
 		int res = result.indexOf("@");
-		return res;
+		String[] ary = result.split("");
+		String email = "";
+		
+		for(int i = (res-1);i>=(res-30);i--) {
+			String ss = ary[i].toLowerCase();
+			char c = ss.charAt(0);
+			if((c >= 'a' && c <= 'z')||(c >= '0' && c <= '9')||(c == '-')||(c == '.')||(c == 'à')||(c == 'á')||(c == 'â')||(c == 'ã')||(c == 'é')||(c == 'ê')||(c == 'í')||(c == 'ó')||(c == 'ô')||(c == 'õ')||(c == 'ú')||(c == 'ü')||(c == 'ç')) {
+				// System.out.println(c);
+				email = c+email;
+			}else{
+				break;
+			}
+		}
+		
+		email = email+"@";
+		
+		for(int i = (res+1);i<=(res+26);i++) {
+			String ss = ary[i].toLowerCase();
+			char c = ss.charAt(0);
+			if((c >= 'a' && c <= 'z')||(c >= '0' && c <= '9')||(c == '-')||(c == '.')||(c == 'à')||(c == 'á')||(c == 'â')||(c == 'ã')||(c == 'é')||(c == 'ê')||(c == 'í')||(c == 'ó')||(c == 'ô')||(c == 'õ')||(c == 'ú')||(c == 'ü')||(c == 'ç')) {
+				// System.out.println(c);
+				email = email+c;
+			}else{
+				break;
+			}
+		}
+		
+		// System.out.println(email);
+		
+		return email;
 	}
 }
