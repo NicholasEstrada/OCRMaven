@@ -8,8 +8,24 @@ import java.io.IOException;
 
 public class LerImagem {
 
-    public static void main(String[] args) throws IOException {
-        File imageFile = new File("C:\\Users\\Nicholas\\Pictures\\images\\eurotext.tif");
+    public LerImagem(String args) throws IOException {
+    	File imageFile = new File(args);
+        Tesseract tess4j = new Tesseract();
+        // tess path location 
+        tess4j.setDatapath("C:\\Users\\Nicholas\\eclipse-workspace\\OCRMaven\\tessdata");
+        // tess4j.setLanguage("por");
+        try {
+            String result = tess4j.doOCR(imageFile);
+            // System.out.println(result);
+            System.out.println(procuraEmail(result));
+            
+        } catch (TesseractException e) {
+            System.err.println(e.getMessage());
+        }
+	}
+
+	public static void main(String args) throws IOException {
+        File imageFile = new File(args);
         Tesseract tess4j = new Tesseract();
         // tess path location 
         tess4j.setDatapath("C:\\Users\\Nicholas\\eclipse-workspace\\OCRMaven\\tessdata");
@@ -53,9 +69,6 @@ public class LerImagem {
 				break;
 			}
 		}
-		
-		// System.out.println(email);
-		
 		return email;
 	}
 }
