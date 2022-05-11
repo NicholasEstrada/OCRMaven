@@ -10,43 +10,43 @@ import java.io.IOException;
 //import com.lowagie.text.List;
 
 public class ListaPasta {
-	
+
 	public ListaPasta() throws IOException {
-		/*@SuppressWarnings("resource")
-		Scanner r = new Scanner(System.in);
-		System.out.println("Digite o caminho: ");
-		String diretorio = r.next();*/
-		
+		/*
+		 * @SuppressWarnings("resource") Scanner r = new Scanner(System.in);
+		 * System.out.println("Digite o caminho: "); String diretorio = r.next();
+		 */
+
 		String diretorio = "C:\\Users\\Nicholas\\Pictures";
-		
+
 		File file = new File(diretorio);
 		File afile[] = file.listFiles();
 		int i = 0;
 		for (int j = afile.length; i < j; i++) {
 			File arquivos = afile[i];
-			recursivo(arquivos,diretorio);
+			recursivo(arquivos, diretorio);
 		}
 	}
-	
+
 	public static void recursivo(File arquivos, String diretorio) {
-		if(arquivos.isDirectory() == true) {
-			String diretorio1 = diretorio+"\\"+arquivos.getName();
+		if (arquivos.isDirectory() == true) {
+			String diretorio1 = diretorio + "\\" + arquivos.getName();
 			File file1 = new File(diretorio1);
 			File afile1[] = file1.listFiles();
 			int i1 = 0;
 			for (int j1 = afile1.length; i1 < j1; i1++) {
 				File arquivos1 = afile1[i1];
-				if(arquivos1.isDirectory() == true) {
-					recursivo(arquivos1,diretorio1);
+				if (arquivos1.isDirectory() == true) {
+					recursivo(arquivos1, diretorio1);
 				} else {
-					String o = diretorio1+"\\"+arquivos1.getName();
+					String o = diretorio1 + "\\" + arquivos1.getName();
 					@SuppressWarnings("unused")
 					LerImagem l;
 					try {
-						if(tipoAceito(arquivos1.getName())==true){
+						if (tipoAceito(arquivos1.getName()) == true) {
 							l = new LerImagem(o);
 							System.out.println(o);
-						}else {
+						} else {
 							System.out.println("Tipo nao aceito");
 						}
 					} catch (IOException e) {
@@ -56,14 +56,14 @@ public class ListaPasta {
 				}
 			}
 		} else {
-			String o = diretorio+"\\"+arquivos.getName();
+			String o = diretorio + "\\" + arquivos.getName();
 			@SuppressWarnings("unused")
 			LerImagem l;
 			try {
-				if(tipoAceito(arquivos.getName())==true){
+				if (tipoAceito(arquivos.getName()) == true) {
 					l = new LerImagem(o);
 					System.out.println(o);
-				}else {
+				} else {
 					System.out.println("Tipo não aceito");
 				}
 			} catch (IOException e) {
@@ -78,16 +78,16 @@ public class ListaPasta {
 		int tip = name.indexOf(".");
 		String[] ary = name.split("");
 		String tipo = "";
-		
-		for(int i=(tip+1); i < name.length();i++) {
-			String ss = ary[i].toLowerCase();    // AQUIIII AAAAAA HELP
+
+		for (int i = (tip + 1); i < name.length(); i++) {
+			String ss = ary[i].toLowerCase(); // AQUIIII AAAAAA HELP
 			char c = ss.charAt(0);
-			tipo = tipo+c;
+			tipo = tipo + c;
 		}
-		
-		if(tipo.equals("pdf") || tipo.equals("tif") || tipo.equals("png")) {
+
+		if (tipo.equals("pdf") || tipo.equals("tif") || tipo.equals("png") || tipo.equals("jpg")) {
 			return true;
-		}else {
+		} else {
 			return false;
 		}
 	}
