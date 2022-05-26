@@ -7,15 +7,17 @@ import java.io.File;
 import java.io.IOException;
 
 public class LerImagem {
-
+	public String resultado;
+	
 	public LerImagem(String args) throws IOException {
 		File imageFile = new File(args);
 		Tesseract tess4j = new Tesseract();
+		
 		// tess path location
-		tess4j.setDatapath("C:\\Users\\Nicholas\\eclipse-workspace\\OCRMaven\\tessdata");
+		tess4j.setDatapath("C:\\Users\\nicho_dfsl9b0\\git\\OCRMaven\\tessdata");
 		try {
 			String result = tess4j.doOCR(imageFile);
-			System.out.println(procuraEmail(result));
+			resultado = procuraEmail(result);
 
 		} catch (TesseractException e) {
 			System.err.println(e.getMessage());

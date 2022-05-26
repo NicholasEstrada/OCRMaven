@@ -1,23 +1,19 @@
 package JavaTCC.OCRMaven;
 
-// import java.util.Scanner;
-
 import java.io.File;
 import java.io.IOException;
-//import java.nio.file.Files;
-//import java.util.ArrayList;
-
-//import com.lowagie.text.List;
 
 public class ListaPasta {
+	public static String local;
+	public static String leitura;
 
-	public ListaPasta() throws IOException {
+	public ListaPasta(String diretorio) throws IOException {
 		/*
 		 * @SuppressWarnings("resource") Scanner r = new Scanner(System.in);
 		 * System.out.println("Digite o caminho: "); String diretorio = r.next();
 		 */
 
-		String diretorio = "C:\\Users\\Nicholas\\Pictures";
+		// diretorio = "C:\\Users\\nicho_dfsl9b0\\Imagens\\Pictures";
 
 		File file = new File(diretorio);
 		File afile[] = file.listFiles();
@@ -42,12 +38,17 @@ public class ListaPasta {
 					String o = diretorio1 + "\\" + arquivos1.getName();
 					@SuppressWarnings("unused")
 					LerImagem l;
+
 					try {
 						if (tipoAceito(arquivos1.getName()) == true) {
 							l = new LerImagem(o);
-							System.out.println(o);
+							local = o;
+							leitura = l.resultado;
+							System.out.println(leitura + " " + local);
 						} else {
-							System.out.println("Tipo nao aceito");
+							local = o;
+							leitura = "Tipo não aceito";
+							System.out.println(leitura + " " + local);
 						}
 					} catch (IOException e) {
 						// TODO Auto-generated catch block
@@ -59,12 +60,17 @@ public class ListaPasta {
 			String o = diretorio + "\\" + arquivos.getName();
 			@SuppressWarnings("unused")
 			LerImagem l;
+
 			try {
 				if (tipoAceito(arquivos.getName()) == true) {
 					l = new LerImagem(o);
-					System.out.println(o);
+					local = o;
+					leitura = l.resultado;
+					System.out.println(leitura + " " + local);
+
 				} else {
-					System.out.println("Tipo não aceito");
+					leitura = "Tipo não aceito";
+					System.out.println(leitura + " " + local);
 				}
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
@@ -97,12 +103,12 @@ public class ListaPasta {
 	 */
 	@SuppressWarnings("unused")
 	public static void main(String[] args) {
-		try {
-			ListaPasta v = new ListaPasta();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+		// try {
+		// ListaPasta v = new ListaPasta("test");
+		// } catch (IOException e) {
+		// TODO Auto-generated catch block
+		// e.printStackTrace();
+		// }
 
 	}
 }
