@@ -32,56 +32,24 @@ public class LerImagem {
 	}
 
 	private static String procuraEmail(String result, int inicio) {
-		// TODO Auto-generated method stub
-		int res = result.indexOf("@", inicio);
-		if (res != -1) {
-			String[] ary = result.split("");
-			String email = "";
+	    String email = "";
+	    Pattern pattern = Pattern.compile("\\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}\\b");
+	    Matcher matcher = pattern.matcher(result.substring(inicio));
 
-			for (int i = (res - 1); i >= (res - 30); i--) {
-				String ss = ary[i].toLowerCase();
-				char c = ss.charAt(0);
-				if ((c >= 'a' && c <= 'z') || (c >= '0' && c <= '9') || (c == '-') || (c == '.') || (c == 'à')
-						|| (c == 'á') || (c == 'â') || (c == 'ã') || (c == 'é') || (c == 'ê') || (c == 'í')
-						|| (c == 'ó') || (c == 'ô') || (c == 'õ') || (c == 'ú') || (c == 'ü') || (c == 'ç')) {
-					email = c + email;
-				} else {
-					break;
-				}
-			}
+	    if (matcher.find()) {
+	        email = matcher.group();
+	        int nextIndex = inicio + matcher.start() + email.length();
+	        if (nextIndex < result.length()) {
+	            String nextEmail = procuraEmail(result, nextIndex);
+	            if (!nextEmail.equals("")) {
+	                email += ";" + nextEmail;
+	            }
+	        }
+	    }
 
-			email = email + "@";
-
-			for (int i = (res + 1); i <= (res + 26); i++) {
-				String ss = ary[i].toLowerCase();
-				char c = ss.charAt(0);
-				if ((c >= 'a' && c <= 'z') || (c >= '0' && c <= '9') || (c == '-') || (c == '.') || (c == 'à')
-						|| (c == 'á') || (c == 'â') || (c == 'ã') || (c == 'é') || (c == 'ê') || (c == 'í')
-						|| (c == 'ó') || (c == 'ô') || (c == 'õ') || (c == 'ú') || (c == 'ü') || (c == 'ç')) {
-					email = email + c;
-				} else {
-					break;
-				}
-			}
-			
-			// solução com recursão para 
-			int reinicializador = res+(email.length());
-			if( (ary.length-1) >= reinicializador-(email.length()) ) {
-				res = result.indexOf("@", reinicializador);
-				if (res != -1) {
-					email = email + ";" + procuraEmail(result, res);
-				}
-			}
-			
-			// se no return houver mais que um email sera considerado um return nome@dominio;nome@dominio
-			return email;		
-		
-		} else {
-			return "Sem email";
-		}
-
+	    return email;
 	}
-	
+
 	
 	public static boolean validarCPF(String cpf) {
         // Remover caracteres especiais
@@ -97,30 +65,33 @@ public class LerImagem {
             return false;
         }
         
-        // Validar dígitos verificadores
-        int[] cpfArray = new int[11];
-        for (int i = 0; i < 11; i++) {
-            cpfArray[i] = Character.getNumericValue(cpfNumeros.charAt(i));
-        }
-        
-        int soma1 = 0;
-        int soma2 = 0;
+        // Validar primeiro dígito verificador
+        int soma = 0;
         for (int i = 0; i < 9; i++) {
-            soma1 += cpfArray[i] * (10 - i);
-            soma2 += cpfArray[i] * (11 - i);
+            soma += Character.getNumericValue(cpfNumeros.charAt(i)) * (10 - i);
         }
-        
-        int digitoVerificador1 = (soma1 * 10) % 11;
-        int digitoVerificador2 = (soma2 * 10) % 11;
-        
-        if (digitoVerificador1 == 10) {
+        int digitoVerificador1 = 11 - (soma % 11);
+        if (digitoVerificador1 > 9) {
             digitoVerificador1 = 0;
         }
-        if (digitoVerificador2 == 10) {
-            digitoVerificador2 = 0;
+        if (Character.getNumericValue(cpfNumeros.charAt(9)) != digitoVerificador1) {
+            return false;
         }
         
-        return cpfArray[9] == digitoVerificador1 && cpfArray[10] == digitoVerificador2;
+        // Validar segundo dígito verificador
+        soma = 0;
+        for (int i = 0; i < 10; i++) {
+            soma += Character.getNumericValue(cpfNumeros.charAt(i)) * (11 - i);
+        }
+        int digitoVerificador2 = 11 - (soma % 11);
+        if (digitoVerificador2 > 9) {
+            digitoVerificador2 = 0;
+        }
+        if (Character.getNumericValue(cpfNumeros.charAt(10)) != digitoVerificador2) {
+            return false;
+        }
+        
+        return true;
     }
 	
 	
@@ -136,57 +107,78 @@ public class LerImagem {
     }
 	
 	
-	public static String regex_find() {
-		
+	public static String regex_find(String regex, String texto, int inicio) {
+	    Pattern pattern = Pattern.compile(regex);
+	    Matcher matcher = pattern.matcher(texto);
+	    
+	    StringBuilder result = new StringBuilder();
+	    boolean hasMatch = false;
+
+	    while (matcher.find(inicio)) {
+	        String cpf = matcher.group();
+	        
+	        if (!cpf.isEmpty()) {
+	            if (validarCPF(cpf)) {
+	                cpf = formatarCPF(cpf);
+	            } else {
+	                cpf = formatarCPF(cpf) + " -> Não Valido";
+	            }
+	            
+	            if (hasMatch) {
+	                result.append("; ");
+	            }
+	            result.append(cpf);
+	            
+	            inicio = matcher.end();
+	            hasMatch = true;
+	        }
+	    }
+	    
+	    if (!hasMatch) {
+	        return null;
+	    }
+
+	    return result.toString();
 	}
+
 	
 	
 	private static String procuraCPF(String result, int inicio) {
 		
-		String regex_0 = "\\d{3}\\.\\d{3}\\.\\d{3}-\\d{2}";	// 14
-		//String regex_1 = "\\d{9}-\\d{2}";					// 12
-		//String regex_2 = "\\d{11}";							// 11
-		
-		Pattern pattern = Pattern.compile(regex_0);
-		Matcher matcher = pattern.matcher(result);
-		
-		while (matcher.find(inicio)) {
-			String cpf = matcher.group();
+		int i;
+		String cpfs_achados = "";
+		String regex_0 = "\\d{3}\\.\\d{3}\\.\\d{3}-\\d{2}";
+		String regex_1 = "\\d{9}-\\d{2}";
+		String regex_2 = "\\d{11}";				
+		String[] regexes = {regex_0, regex_1, regex_2};
 			
-			if (cpf != "" ) {
-				
-				if (validarCPF(cpf)) {
-					cpf = formatarCPF(cpf);
-				}else {
-					cpf = cpf+" -> Não Valido";
-				}
-				
-				// alterar função para que o res_0 seja o indexof() do ultimo caracter
-				// solução com recursão para 
-				
-				int res_0 = matcher.end();
-				int reinicializador = res_0+(cpf.length());
-				if( (result.length()-1) >= reinicializador-(cpf.length()) ) {
-						cpf = cpf + ";" + procuraCPF(result, res_0);
-				}
-				
-				// se no return houver mais que um email sera considerado um return nome@dominio;nome@dominio
-				return cpf;
-			
-			} else {
-				return "Sem CPF";
-			}
-			
+		for (i = 0; i < regexes.length ; i++) {
+			cpfs_achados = cpfs_achados+regex_find(regexes[i], result, inicio);
 		}
-		return null;
 		
-		//int res_0 = result.indexOf(regex_0, inicio);
-		//int res_1 = result.indexOf(regex_1, inicio);
-		//int res_2 = result.indexOf(regex_2, inicio);
-		
-		
-		
+		return cpfs_achados;
 		
 	}
 	
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
