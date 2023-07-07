@@ -13,11 +13,13 @@ import java.net.URL;
 import java.util.HashSet;
 import java.util.Set;
 
+import javax.swing.JOptionPane;
+
 public class InputDomain {
     private static Set<String> visitedUrls = new HashSet<>();
 
     public static void main(String[] args) {
-        String domain = "https://www.araquari.ifc.edu.br"; // Substitua pelo domínio do site que você deseja vasculhar
+        String domain = "https://araquari.ifc.edu.br/"; // Substitua pelo domínio do site que você deseja vasculhar
 
         crawl(domain);
     }
@@ -37,8 +39,17 @@ public class InputDomain {
                 String href = link.attr("abs:href");
                 if (href.endsWith(".pdf")) {
                     System.out.println("Encontrado PDF: " + href);
-                    downloadPDF(href);
-                    extractTextFromPDF(href);
+                    /*try {
+                        LerImagem le = new LerImagem(caminho);
+                        
+                    JOptionPane.showMessageDialog(null, le.resultado);
+                    } catch (IOException e) {
+                        // TODO Auto-generated catch block
+                        e.printStackTrace();
+                    }*/
+                    
+                    //downloadPDF(href);
+                    //extractTextFromPDF(href);
                 } else if (href.startsWith(url)) {
                     crawl(href);
                 }
