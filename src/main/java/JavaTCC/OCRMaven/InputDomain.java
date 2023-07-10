@@ -1,5 +1,4 @@
 package JavaTCC.OCRMaven;
-
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -13,13 +12,13 @@ import java.net.URL;
 import java.util.HashSet;
 import java.util.Set;
 
-import javax.swing.JOptionPane;
-
 public class InputDomain {
     private static Set<String> visitedUrls = new HashSet<>();
+    private static Set<String> visitedPDFs = new HashSet<>();
+    private static Set<String> visitedImages = new HashSet<>();
 
     public static void main(String[] args) {
-        String domain = "https://araquari.ifc.edu.br/"; // Substitua pelo domínio do site que você deseja vasculhar
+        String domain = "https://www.camarapoa.rs.gov.br"; // Substitua pelo domínio do site que você deseja vasculhar
 
         crawl(domain);
     }
@@ -37,19 +36,22 @@ public class InputDomain {
 
             for (Element link : links) {
                 String href = link.attr("abs:href");
-                if (href.endsWith(".pdf")) {
-                    System.out.println("Encontrado PDF: " + href);
-                    /*try {
-                        LerImagem le = new LerImagem(caminho);
-                        
-                    JOptionPane.showMessageDialog(null, le.resultado);
-                    } catch (IOException e) {
-                        // TODO Auto-generated catch block
-                        e.printStackTrace();
-                    }*/
-                    
-                    //downloadPDF(href);
-                    //extractTextFromPDF(href);
+                if (isPDF(href)) {
+                    if (!visitedPDFs.contains(href)) {
+                        visitedPDFs.add(href);
+                        System.out.println("Encontrado PDF: " + href);
+                        //downloadPDF(href);
+                        //texto = extractTextFromPDF(href);
+
+                        LerImagem info = new LerImagem(href, "url");
+                        System.out.println(info.resultado + "TESTEEE");
+                    }
+                } else if (isImage(href)) {
+                    if (!visitedImages.contains(href)) {
+                        visitedImages.add(href);
+                        System.out.println("Encontrada imagem: " + href);
+                        // Processar imagem aqui (por exemplo, fazer OCR em imagem)
+                    }
                 } else if (href.startsWith(url)) {
                     crawl(href);
                 }
@@ -59,6 +61,16 @@ public class InputDomain {
         }
     }
 
+    private static boolean isPDF(String url) {
+        return url.toLowerCase().endsWith(".pdf");
+    }
+
+    private static boolean isImage(String url) {
+        String lowercaseUrl = url.toLowerCase();
+        return lowercaseUrl.endsWith(".jpeg") || lowercaseUrl.endsWith(".jpg") || lowercaseUrl.endsWith(".png");
+        // Adicione outros formatos de imagem suportados aqui, se necessário
+    }
+
     private static void downloadPDF(String url) throws IOException {
         URL pdfUrl = new URL(url);
         try (BufferedInputStream in = new BufferedInputStream(pdfUrl.openStream())) {
@@ -66,11 +78,12 @@ public class InputDomain {
         }
     }
 
-    private static void extractTextFromPDF(String url) throws IOException {
+    private static String extractTextFromPDF(String url) throws IOException {
         try (PDDocument document = PDDocument.load(new URL(url).openStream())) {
             PDFTextStripper pdfStripper = new PDFTextStripper();
             String text = pdfStripper.getText(document);
-            System.out.println("Texto extraído do PDF:\n" + text);
+            //System.out.println("Texto extraído do PDF:\n" + text);
+            return text;
         }
     }
 }

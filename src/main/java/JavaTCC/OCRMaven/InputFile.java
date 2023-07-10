@@ -27,7 +27,7 @@ public class InputFile extends JFrame{
                 if (retorno == JFileChooser.APPROVE_OPTION){
                     String caminho = choose.getSelectedFile().getAbsolutePath();
                     try {
-                        LerImagem le = new LerImagem(caminho);
+                        LerImagem le = new LerImagem(caminho, "local");
                         
                     JOptionPane.showMessageDialog(null, le.resultado);
                     } catch (IOException e) {

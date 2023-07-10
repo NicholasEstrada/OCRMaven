@@ -41,7 +41,7 @@ public class ListaPasta {
 
 					try {
 						if (tipoAceito(arquivos1.getName()) == true) {
-							l = new LerImagem(o);
+							l = new LerImagem(o, "local");
 							local = o;
 							leitura = l.resultado;
 							System.out.println(leitura + " " + local);
@@ -63,7 +63,7 @@ public class ListaPasta {
 
 			try {
 				if (tipoAceito(arquivos.getName()) == true) {
-					l = new LerImagem(o);
+					l = new LerImagem(o, "local");
 					local = o;
 					leitura = l.resultado;
 					System.out.println(leitura + " " + local);
