@@ -1,11 +1,18 @@
 package JavaTCC.OCRMaven;
 
 import net.sourceforge.tess4j.ITesseract;
-import java.net.URL;
+
+import java.io.BufferedInputStream;
+import java.io.InputStream;
+import java.net.*;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 
 import net.sourceforge.tess4j.Tesseract;
 import net.sourceforge.tess4j.TesseractException;
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.text.PDFTextStripper;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.regex.Pattern;
@@ -16,7 +23,7 @@ public class LerImagem {
 	public String resultado;
 
 	public LerImagem(String args, String type) throws IOException {
-		if (type == "local") {
+		if (type.equals("local")) {
 			File imageFile = new File(args);
 			Tesseract tess4j = new Tesseract();
 			// tess path location ATUALIZAR EM CASO DE TROCA DE AREA DE DESENVOLVIMENTO
@@ -29,36 +36,31 @@ public class LerImagem {
 				System.err.println(e.getMessage());
 			}
 
-		} else if (type == "url") {
-			URL url = new URL(args);
-
-			File arquivo = downloadArquivo(url);
-
-			ITesseract tesseract = new Tesseract();
-
-			tesseract.setLanguage("eng");
+		} else if (type.equals("url")) {
 
 			try {
-				String result = tesseract.doOCR(arquivo);
-				resultado = " Email: " + procuraEmail(result, 0) + " CPF: " + procuraCPF(result, 0);
+				String result = extractTextFromPDF(args);
+				resultado = " Email: " + procuraEmail(result, 0) + " CPF: " + procuraCPF(result, 0) + " de " +  args;
 
-			} catch (TesseractException e) {
+			} catch (IOException e) {
 				System.err.println(e.getMessage());
 			}
 
 		}
 	}
 
-	private static File downloadArquivo(URL url) throws IOException {
-		File arquivoTemporario = File.createTempFile("temp", ".tmp");
-	
-		if (arquivoTemporario.exists()) {
-			arquivoTemporario.delete();
+
+	private static File downloadPDF(String url) throws IOException {
+		URL pdfUrl = new URL(url);
+		File tempFile = File.createTempFile("temp", ".pdf");
+
+		try {
+			Files.copy(pdfUrl.openStream(), tempFile.toPath());
+		} catch (IOException e) {
+			System.err.println("Erro durante o download do arquivo: " + e.getMessage());
 		}
-	
-		Files.copy(url.openStream(), arquivoTemporario.toPath());
-	
-		return arquivoTemporario;
+
+		return tempFile;
 	}
 	
 
@@ -76,7 +78,7 @@ public class LerImagem {
 			int nextIndex = inicio + matcher.start() + email.length();
 			if (nextIndex < result.length()) {
 				String nextEmail = procuraEmail(result, nextIndex);
-				if (!nextEmail.equals("")) {
+				if (!nextEmail.isEmpty()) {
 					email += ";" + nextEmail;
 				}
 			}
@@ -190,7 +192,49 @@ public class LerImagem {
 
 	}
 
-	public static void procuraCPF(Object extractTextFromPDF) {
-	}
+
+
+
+	private static String extractTextFromPDF(String url) throws IOException {
+
+		try {
+
+
+			// Use URLEncoder para codificar a URL inteira, incluindo o caminho para o arquivo
+			String encodedURL = URLEncoder.encode(url, "UTF-8").replace("+","%20");
+
+			// Construa a URI com a URL codificada
+			URL uri = new URL(encodedURL
+					.replaceAll("%2F","/")
+					.replaceAll("%3A",":")
+			);
+
+			System.out.println(uri + " <------ URL em codificação");
+
+			// Abra a conexão com a URI e obtenha um fluxo de entrada
+			try (InputStream in = new BufferedInputStream(uri.openStream())) {
+				// Carregue o PDF no PDDocument
+
+
+				PDDocument document = PDDocument.load(in);
+
+				// Agora você pode trabalhar com o PDDocument normalmente
+				// Por exemplo, extrair texto do PDF:
+				PDFTextStripper pdfStripper = new PDFTextStripper();
+				String text = pdfStripper.getText(document);
+
+				document.close();
+
+				return text;
+
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+        return url;
+    }
 
 }

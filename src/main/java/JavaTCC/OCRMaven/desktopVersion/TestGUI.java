@@ -1,4 +1,4 @@
-package JavaTCC.OCRMaven;
+package JavaTCC.OCRMaven.desktopVersion;
 
 import java.awt.EventQueue;
 

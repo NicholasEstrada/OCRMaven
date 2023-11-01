@@ -7,57 +7,83 @@ import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.text.PDFTextStripper;
 
 import java.io.BufferedInputStream;
+import java.io.File;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.util.HashSet;
 import java.util.Set;
 
 public class InputDomain {
-    private static Set<String> visitedUrls = new HashSet<>();
-    private static Set<String> visitedPDFs = new HashSet<>();
-    private static Set<String> visitedImages = new HashSet<>();
 
-    public static void main(String[] args) {
+
+    private static final Set<String> visitedUrls = new HashSet<>();
+    private static final Set<String> visitedPDFs = new HashSet<>();
+    private static final Set<String> visitedImages = new HashSet<>();
+
+    public static void main(String[] args) throws UnsupportedEncodingException {
         String domain = "https://www.camarapoa.rs.gov.br"; // Substitua pelo domínio do site que você deseja vasculhar
 
         crawl(domain);
     }
 
-    private static void crawl(String url) {
+    public void pesquisaDominio(String args) throws UnsupportedEncodingException {
+        crawl(args);
+    }
+
+    private static void crawl(String urlNaoModificado) throws UnsupportedEncodingException {
+
+
         try {
-            if (visitedUrls.contains(url)) {
+            if (visitedUrls.contains(urlNaoModificado)) {
                 return;
             }
 
-            visitedUrls.add(url);
+            visitedUrls.add(urlNaoModificado);
 
-            Document doc = Jsoup.connect(url).get();
+            URI Url0 = new URI(urlNaoModificado);
+            String url = Url0.toASCIIString();
+
+
+            //Document doc = Jsoup.connect(String.valueOf(url)).get();
+
+            Document doc = Jsoup.connect(url).ignoreContentType(true).get();
+
             Elements links = doc.select("a[href]");
 
             for (Element link : links) {
+
+
                 String href = link.attr("abs:href");
                 if (isPDF(href)) {
                     if (!visitedPDFs.contains(href)) {
-                        visitedPDFs.add(href);
-                        System.out.println("Encontrado PDF: " + href);
-                        //downloadPDF(href);
-                        //texto = extractTextFromPDF(href);
 
-                        LerImagem info = new LerImagem(href, "url");
-                        System.out.println(info.resultado + "TESTEEE");
+                        visitedPDFs.add(href);
+
+                        System.out.println("Encontrado PDF: " + href);
+
+                        LerImagem lerImagem = new LerImagem(href, "url");
+                        System.out.println(lerImagem.resultado);
+
+
                     }
                 } else if (isImage(href)) {
-                    if (!visitedImages.contains(href)) {
-                        visitedImages.add(href);
-                        System.out.println("Encontrada imagem: " + href);
-                        // Processar imagem aqui (por exemplo, fazer OCR em imagem)
-                    }
-                } else if (href.startsWith(url)) {
+                    // System.out.println("Encontrada imagem: " + href);
+                    // Processar imagem aqui (por exemplo, fazer OCR em imagem)
+                    visitedImages.add(href);
+                } else if (href.startsWith(String.valueOf(url))) {
                     crawl(href);
                 }
             }
         } catch (IOException e) {
             e.printStackTrace();
+        } catch (URISyntaxException e) {
+            throw new RuntimeException(e);
         }
     }
 
@@ -71,19 +97,6 @@ public class InputDomain {
         // Adicione outros formatos de imagem suportados aqui, se necessário
     }
 
-    private static void downloadPDF(String url) throws IOException {
-        URL pdfUrl = new URL(url);
-        try (BufferedInputStream in = new BufferedInputStream(pdfUrl.openStream())) {
-            // Implemente o código para salvar o arquivo PDF localmente
-        }
-    }
 
-    private static String extractTextFromPDF(String url) throws IOException {
-        try (PDDocument document = PDDocument.load(new URL(url).openStream())) {
-            PDFTextStripper pdfStripper = new PDFTextStripper();
-            String text = pdfStripper.getText(document);
-            //System.out.println("Texto extraído do PDF:\n" + text);
-            return text;
-        }
-    }
+
 }
