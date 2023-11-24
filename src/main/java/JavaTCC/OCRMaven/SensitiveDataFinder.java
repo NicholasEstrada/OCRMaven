@@ -1,11 +1,7 @@
 package JavaTCC.OCRMaven;
 
-import net.sourceforge.tess4j.ITesseract;
-
-import java.io.BufferedInputStream;
-import java.io.InputStream;
+import java.io.*;
 import java.net.*;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 
 import net.sourceforge.tess4j.Tesseract;
@@ -13,16 +9,14 @@ import net.sourceforge.tess4j.TesseractException;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.text.PDFTextStripper;
 
-import java.io.File;
-import java.io.IOException;
 import java.util.regex.Pattern;
 import java.util.regex.Matcher;
 import java.text.DecimalFormat;
 
-public class LerImagem {
+public class FoundDataSensible implements Closeable {
 	public String resultado;
 
-	public LerImagem(String args, String type) throws IOException {
+	public FoundDataSensible(String args, String type) throws IOException {
 		if (type.equals("local")) {
 			File imageFile = new File(args);
 			Tesseract tess4j = new Tesseract();
@@ -79,7 +73,7 @@ public class LerImagem {
 			if (nextIndex < result.length()) {
 				String nextEmail = procuraEmail(result, nextIndex);
 				if (!nextEmail.isEmpty()) {
-					email += ";" + nextEmail;
+					email += "; " + nextEmail;
 				}
 			}
 		}
@@ -155,7 +149,7 @@ public class LerImagem {
 				if (validarCPF(cpf)) {
 					cpf = formatarCPF(cpf);
 				} else {
-					cpf = formatarCPF(cpf) + " -> Não Valido";
+					cpf = "";
 				}
 
 				if (hasMatch) {
@@ -177,18 +171,28 @@ public class LerImagem {
 
 	private static String procuraCPF(String result, int inicio) {
 
+		if (result == null) {
+			return "";
+		}
+
 		int i;
-		String cpfs_achados = "";
+		StringBuilder cpfs_achados = new StringBuilder();
 		String regex_0 = "\\d{3}\\.\\d{3}\\.\\d{3}-\\d{2}";
 		String regex_1 = "\\d{9}-\\d{2}";
 		String regex_2 = "\\d{11}";
 		String[] regexes = { regex_0, regex_1, regex_2 };
 
 		for (i = 0; i < regexes.length; i++) {
-			cpfs_achados = cpfs_achados + regex_find(regexes[i], result, inicio);
+			String cpfEncontrado = regex_find(regexes[i], result, inicio);
+			if (cpfEncontrado != null && !cpfEncontrado.isEmpty()) {
+				if (cpfs_achados.length() > 0) {
+					cpfs_achados.append("; ");
+				}
+				cpfs_achados.append(cpfEncontrado);
+			}
 		}
 
-		return cpfs_achados;
+		return cpfs_achados.toString();
 
 	}
 
@@ -198,7 +202,6 @@ public class LerImagem {
 	private static String extractTextFromPDF(String url) throws IOException {
 
 		try {
-
 
 			// Use URLEncoder para codificar a URL inteira, incluindo o caminho para o arquivo
 			String encodedURL = URLEncoder.encode(url, "UTF-8").replace("+","%20");
@@ -213,13 +216,9 @@ public class LerImagem {
 
 			// Abra a conexão com a URI e obtenha um fluxo de entrada
 			try (InputStream in = new BufferedInputStream(uri.openStream())) {
-				// Carregue o PDF no PDDocument
-
 
 				PDDocument document = PDDocument.load(in);
 
-				// Agora você pode trabalhar com o PDDocument normalmente
-				// Por exemplo, extrair texto do PDF:
 				PDFTextStripper pdfStripper = new PDFTextStripper();
 				String text = pdfStripper.getText(document);
 
@@ -237,4 +236,8 @@ public class LerImagem {
         return url;
     }
 
+	@Override
+	public void close() throws IOException {
+
+	}
 }
