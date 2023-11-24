@@ -13,10 +13,10 @@ import java.util.regex.Pattern;
 import java.util.regex.Matcher;
 import java.text.DecimalFormat;
 
-public class FoundDataSensible implements Closeable {
+public class SensitiveDataFinder implements Closeable {
 	public String resultado;
 
-	public FoundDataSensible(String args, String type) throws IOException {
+	public SensitiveDataFinder(String args, String type) throws IOException {
 		if (type.equals("local")) {
 			File imageFile = new File(args);
 			Tesseract tess4j = new Tesseract();

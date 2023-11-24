@@ -1,6 +1,6 @@
 package JavaTCC.OCRMaven.desktopVersion;
 
-import JavaTCC.OCRMaven.LerImagem;
+import JavaTCC.OCRMaven.SensitiveDataFinder;
 
 import java.io.File;
 import java.io.IOException;
@@ -39,11 +39,11 @@ public class ListaPasta {
 				} else {
 					String o = diretorio1 + "\\" + arquivos1.getName();
 					@SuppressWarnings("unused")
-					LerImagem l;
+					SensitiveDataFinder l;
 
 					try {
 						if (tipoAceito(arquivos1.getName()) == true) {
-							l = new LerImagem(o, "local");
+							l = new SensitiveDataFinder(o, "local");
 							local = o;
 							leitura = l.resultado;
 							System.out.println(leitura + " " + local);
@@ -61,11 +61,11 @@ public class ListaPasta {
 		} else {
 			String o = diretorio + "\\" + arquivos.getName();
 			@SuppressWarnings("unused")
-			LerImagem l;
+			SensitiveDataFinder l;
 
 			try {
 				if (tipoAceito(arquivos.getName()) == true) {
-					l = new LerImagem(o, "local");
+					l = new SensitiveDataFinder(o, "local");
 					local = o;
 					leitura = l.resultado;
 					System.out.println(leitura + " " + local);

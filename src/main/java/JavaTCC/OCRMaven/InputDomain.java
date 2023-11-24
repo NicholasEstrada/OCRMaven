@@ -3,19 +3,11 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
-import org.apache.pdfbox.pdmodel.PDDocument;
-import org.apache.pdfbox.text.PDFTextStripper;
 
-import java.io.BufferedInputStream;
-import java.io.File;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.net.URL;
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -36,21 +28,16 @@ public class InputDomain {
         crawl(args);
     }
 
-    private static void crawl(String urlNaoModificado) throws UnsupportedEncodingException {
-
-
+    private static void crawl(String urlNaoModificada) throws UnsupportedEncodingException {
         try {
-            if (visitedUrls.contains(urlNaoModificado)) {
+            if (visitedUrls.contains(urlNaoModificada)) {
                 return;
             }
 
-            visitedUrls.add(urlNaoModificado);
+            visitedUrls.add(urlNaoModificada);
 
-            URI Url0 = new URI(urlNaoModificado);
-            String url = Url0.toASCIIString();
-
-
-            //Document doc = Jsoup.connect(String.valueOf(url)).get();
+            URI urlURI = new URI(urlNaoModificada);
+            String url = urlURI.toASCIIString();
 
             Document doc = Jsoup.connect(url).ignoreContentType(true).get();
 
@@ -67,13 +54,15 @@ public class InputDomain {
 
                         System.out.println("Encontrado PDF: " + href);
 
-                        LerImagem lerImagem = new LerImagem(href, "url");
-                        System.out.println(lerImagem.resultado);
-
+                        try (SensitiveDataFinder lerImagem = new SensitiveDataFinder(href, "url")) {
+                            System.out.println(lerImagem.resultado);
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
 
                     }
                 } else if (isImage(href)) {
-                    // System.out.println("Encontrada imagem: " + href);
+                    System.out.println("Encontrada imagem: " + href);
                     // Processar imagem aqui (por exemplo, fazer OCR em imagem)
                     visitedImages.add(href);
                 } else if (href.startsWith(String.valueOf(url))) {

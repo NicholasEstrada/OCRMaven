@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration>
+    <Loggers>
+        <Logger name="org.apache.pdfbox" level="warn"/>
+        <Root level="warn">
+            <!-- Remova a referência para o appender Console -->
+        </Root>
+    </Loggers>
+    <!-- Restante da configuração -->
+</Configuration>

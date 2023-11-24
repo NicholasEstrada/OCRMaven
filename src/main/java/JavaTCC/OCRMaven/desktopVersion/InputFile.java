@@ -1,6 +1,6 @@
 package JavaTCC.OCRMaven.desktopVersion;
 
-import JavaTCC.OCRMaven.LerImagem;
+import JavaTCC.OCRMaven.SensitiveDataFinder;
 
 import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
@@ -25,7 +25,7 @@ public InputFile() {
             if (retorno == JFileChooser.APPROVE_OPTION){
                 String caminho = choose.getSelectedFile().getAbsolutePath();
                 try {
-                    LerImagem le = new LerImagem(caminho, "local");
+                    SensitiveDataFinder le = new SensitiveDataFinder(caminho, "local");
 
                 JOptionPane.showMessageDialog(null, le.resultado);
                 } catch (IOException e) {
