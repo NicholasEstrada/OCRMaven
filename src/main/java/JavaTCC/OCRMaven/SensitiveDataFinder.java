@@ -2,7 +2,6 @@ package JavaTCC.OCRMaven;
 
 import java.io.*;
 import java.net.*;
-import java.nio.file.Files;
 
 import net.sourceforge.tess4j.Tesseract;
 import net.sourceforge.tess4j.TesseractException;
@@ -42,22 +41,6 @@ public class SensitiveDataFinder implements Closeable {
 
 		}
 	}
-
-
-	private static File downloadPDF(String url) throws IOException {
-		URL pdfUrl = new URL(url);
-		File tempFile = File.createTempFile("temp", ".pdf");
-
-		try {
-			Files.copy(pdfUrl.openStream(), tempFile.toPath());
-		} catch (IOException e) {
-			System.err.println("Erro durante o download do arquivo: " + e.getMessage());
-		}
-
-		return tempFile;
-	}
-	
-
 	public static void main(String args) {
 
 	}
@@ -135,7 +118,7 @@ public class SensitiveDataFinder implements Closeable {
 		}
 	}
 
-	public static String regex_find(String regex, String texto, int inicio) {
+	public static String regex_findCPF(String regex, String texto, int inicio) {
 		Pattern pattern = Pattern.compile(regex);
 		Matcher matcher = pattern.matcher(texto);
 
@@ -183,7 +166,7 @@ public class SensitiveDataFinder implements Closeable {
 		String[] regexes = { regex_0, regex_1, regex_2 };
 
 		for (i = 0; i < regexes.length; i++) {
-			String cpfEncontrado = regex_find(regexes[i], result, inicio);
+			String cpfEncontrado = regex_findCPF(regexes[i], result, inicio);
 			if (cpfEncontrado != null && !cpfEncontrado.isEmpty()) {
 				if (cpfs_achados.length() > 0) {
 					cpfs_achados.append("; ");
@@ -197,25 +180,30 @@ public class SensitiveDataFinder implements Closeable {
 	}
 
 
-
-
-	private static String extractTextFromPDF(String url) throws IOException {
-
+	private static URL Codifier(String url) {
 		try {
 
 			// Use URLEncoder para codificar a URL inteira, incluindo o caminho para o arquivo
-			String encodedURL = URLEncoder.encode(url, "UTF-8").replace("+","%20");
+			String encodedURL = URLEncoder.encode(url, "UTF-8").replace("+", "%20");
 
 			// Construa a URI com a URL codificada
 			URL uri = new URL(encodedURL
-					.replaceAll("%2F","/")
-					.replaceAll("%3A",":")
+					.replaceAll("%2F", "/")
+					.replaceAll("%3A", ":")
+					.replaceAll("%25", "%")
 			);
+			return uri;
+		} catch (MalformedURLException e) {
+            throw new RuntimeException(e);
+        } catch (UnsupportedEncodingException e) {
+            throw new RuntimeException(e);
+        }
+    }
 
-			System.out.println(uri + " <------ URL em codificação");
+	private static String extractTextFromPDF(String url) throws IOException {
 
 			// Abra a conexão com a URI e obtenha um fluxo de entrada
-			try (InputStream in = new BufferedInputStream(uri.openStream())) {
+			try (InputStream in = new BufferedInputStream(Codifier(url).openStream())) {
 
 				PDDocument document = PDDocument.load(in);
 
@@ -229,10 +217,6 @@ public class SensitiveDataFinder implements Closeable {
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-
         return url;
     }
 
