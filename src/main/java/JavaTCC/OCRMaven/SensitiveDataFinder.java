@@ -15,21 +15,20 @@ import java.text.DecimalFormat;
 public class SensitiveDataFinder implements Closeable {
 	public String resultado;
 
-	public SensitiveDataFinder(String args, String type) throws IOException {
+	public SensitiveDataFinder(File args, String type) throws IOException {
 		if (type.equals("local")) {
-			File imageFile = new File(args);
 			Tesseract tess4j = new Tesseract();
 			// tess path location ATUALIZAR EM CASO DE TROCA DE AREA DE DESENVOLVIMENTO
 			tess4j.setDatapath("C:\\Users\\Nicholas\\git\\OCRMaven\\tessdata");
 			try {
-				String result = tess4j.doOCR(imageFile);
+				String result = tess4j.doOCR(args);
 				resultado = " Email: " + procuraEmail(result, 0) + " CPF: " + procuraCPF(result, 0);
 
 			} catch (TesseractException e) {
 				System.err.println(e.getMessage());
 			}
 
-		} else if (type.equals("url")) {
+		} /*else if (type.equals("url")) {
 
 			try {
 				String result = extractTextFromPDF(args);
@@ -39,7 +38,7 @@ public class SensitiveDataFinder implements Closeable {
 				System.err.println(e.getMessage());
 			}
 
-		}
+		}*/
 	}
 	public static void main(String args) {
 

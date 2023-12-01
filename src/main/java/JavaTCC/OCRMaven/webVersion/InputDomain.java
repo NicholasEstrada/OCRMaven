@@ -7,10 +7,9 @@ import org.jsoup.select.Elements;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.net.URL;
+import java.net.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashSet;
@@ -44,32 +43,35 @@ public class InputDomain {
             URI urlURI = new URI(urlNaoModificada);
             String url = urlURI.toASCIIString();
 
-            Document doc = Jsoup.connect(url).ignoreContentType(true).get();
+            //System.out.println("Chegou aqui 1");
+
+            Document doc = Jsoup.connect(url).userAgent("Mozilla").ignoreContentType(true).get();
+
+            // Document doc = Jsoup.connect(url).ignoreContentType(true).get();
 
             Elements links = doc.select("a[href]");
 
             for (Element link : links) {
 
                 String href = link.attr("abs:href");
-                if (isPDF(href)) {
+                if (isPDF(href) || isImage(href)) {
+
                     if (!visitedPDFs.contains(href)) {
+
+                        System.out.println("Chegou aqui 5");
 
                         visitedPDFs.add(href);
 
                         System.out.println("Encontrado PDF: " + href);
 
-                        try (SensitiveDataFinder lerImagem = new SensitiveDataFinder(href, "url")) {
+                        try (SensitiveDataFinder lerImagem = new SensitiveDataFinder(downloadArchive(href), "local")) {
                             System.out.println(lerImagem.resultado);
                         } catch (Exception e) {
                             e.printStackTrace();
                         }
 
                     }
-                } else if (isImage(href)) {
-                    System.out.println("Encontrada imagem: " + href);
-                    // Processar imagem aqui (por exemplo, fazer OCR em imagem)
-                    visitedImages.add(href);
-                } else if (href.startsWith(String.valueOf(url))) {
+                }else if (href.startsWith(String.valueOf(url))) {
                     crawl(href);
                 }
             }
@@ -80,13 +82,21 @@ public class InputDomain {
         }
     }
 
-    private static File downloadArchive(String url) throws IOException {
-        byte[] fileBytes = IOUtils.toByteArray(new URL(url));
-        Path tempFilePath = Files.createTempFile("tempFile", extractFileExtension(url));
-        Files.write(tempFilePath, fileBytes);
+    private static File downloadArchive(String url) {
+        // Corrigir para abrir uma conexão e obter um InputStream
+        try (InputStream in = Codifier(url).openStream()) {
+            byte[] fileBytes = IOUtils.toByteArray(in);
+            Path tempFilePath = Files.createTempFile("tempFile", extractFileExtension(url));
+            Files.write(tempFilePath, fileBytes);
 
-        return tempFilePath.toFile();
+            return tempFilePath.toFile();
+        } catch (IOException e) {
+            // Trate a exceção aqui, pode imprimir uma mensagem de erro ou fazer algo mais apropriado para sua aplicação.
+            e.printStackTrace();
+            return null; // Ou outra ação apropriada para indicar que o download falhou
+        }
     }
+
 
     public static String extractFileExtension(String url) {
         try {
@@ -102,6 +112,26 @@ public class InputDomain {
         }
 
         return ""; // Se não encontrar a extensão, retorna uma string vazia ou outra indicação apropriada
+    }
+
+    private static URL Codifier(String url) {
+        try {
+
+            // Use URLEncoder para codificar a URL inteira, incluindo o caminho para o arquivo
+            String encodedURL = URLEncoder.encode(url, "UTF-8").replace("+", "%20");
+
+            // Construa a URI com a URL codificada
+            URL uri = new URL(encodedURL
+                    .replaceAll("%2F", "/")
+                    .replaceAll("%3A", ":")
+                    .replaceAll("%25", "%")
+            );
+            return uri;
+        } catch (MalformedURLException e) {
+            throw new RuntimeException(e);
+        } catch (UnsupportedEncodingException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private static boolean isPDF(String url) {
