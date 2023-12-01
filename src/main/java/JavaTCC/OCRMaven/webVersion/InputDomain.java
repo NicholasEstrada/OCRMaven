@@ -1,4 +1,6 @@
-package JavaTCC.OCRMaven;
+package JavaTCC.OCRMaven.webVersion;
+
+import JavaTCC.OCRMaven.SensitiveDataFinder;
 import org.apache.commons.io.IOUtils;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -57,8 +59,6 @@ public class InputDomain {
                 if (isPDF(href) || isImage(href)) {
 
                     if (!visitedPDFs.contains(href)) {
-
-                        System.out.println("Chegou aqui 5");
 
                         visitedPDFs.add(href);
 

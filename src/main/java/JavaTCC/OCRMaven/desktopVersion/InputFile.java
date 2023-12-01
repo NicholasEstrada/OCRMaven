@@ -4,6 +4,7 @@ import JavaTCC.OCRMaven.SensitiveDataFinder;
 
 import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
+import java.io.File;
 import java.io.IOException;
 
 public class InputFile extends JFrame{
@@ -25,7 +26,7 @@ public InputFile() {
             if (retorno == JFileChooser.APPROVE_OPTION){
                 String caminho = choose.getSelectedFile().getAbsolutePath();
                 try {
-                    SensitiveDataFinder le = new SensitiveDataFinder(caminho, "local");
+                    SensitiveDataFinder le = new SensitiveDataFinder(new File(caminho), "local");
 
                 JOptionPane.showMessageDialog(null, le.resultado);
                 } catch (IOException e) {

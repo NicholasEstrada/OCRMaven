@@ -43,7 +43,7 @@ public class ListaPasta {
 
 					try {
 						if (tipoAceito(arquivos1.getName()) == true) {
-							l = new SensitiveDataFinder(o, "local");
+							l = new SensitiveDataFinder(new File(o), "local");
 							local = o;
 							leitura = l.resultado;
 							System.out.println(leitura + " " + local);
@@ -65,7 +65,7 @@ public class ListaPasta {
 
 			try {
 				if (tipoAceito(arquivos.getName()) == true) {
-					l = new SensitiveDataFinder(o, "local");
+					l = new SensitiveDataFinder(new File(o), "local");
 					local = o;
 					leitura = l.resultado;
 					System.out.println(leitura + " " + local);
