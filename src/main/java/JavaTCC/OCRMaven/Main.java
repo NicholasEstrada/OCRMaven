@@ -9,6 +9,13 @@ import java.nio.file.Path;
 
 import org.apache.commons.io.IOUtils;
 
+/*
+ *
+ *
+ * FUNÇÃO MAIN PARA EXECUTAR TESTES INDEPENDENTES
+ *
+ *
+ */
 public class Main {
     public static void main(String[] args) {
         String url = "https://www.genoprimer.com.br/wp-content/uploads/2022/04/encode-1200x565-1-1024x482.jpg";

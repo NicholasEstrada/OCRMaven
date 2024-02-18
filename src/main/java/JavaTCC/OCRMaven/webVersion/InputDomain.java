@@ -1,6 +1,7 @@
 package JavaTCC.OCRMaven.webVersion;
 
 import JavaTCC.OCRMaven.SensitiveDataFinder;
+import JavaTCC.OCRMaven.ValidateDataFormat;
 import org.apache.commons.io.IOUtils;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -17,7 +18,7 @@ import java.nio.file.Path;
 import java.util.HashSet;
 import java.util.Set;
 
-public class InputDomain {
+public class InputDomain implements ValidateDataFormat {
 
 
     private static final Set<String> visitedUrls = new HashSet<>();
@@ -30,26 +31,19 @@ public class InputDomain {
         crawl(domain);
     }
 
-    public void pesquisaDominio(String args) throws UnsupportedEncodingException {
-        crawl(args);
-    }
 
-    private static void crawl(String urlNaoModificada) throws UnsupportedEncodingException {
+    private static void crawl(String domain) throws UnsupportedEncodingException {
         try {
-            if (visitedUrls.contains(urlNaoModificada)) {
+            if (visitedUrls.contains(domain)) {
                 return;
             }
 
-            visitedUrls.add(urlNaoModificada);
+            visitedUrls.add(domain);
 
-            URI urlURI = new URI(urlNaoModificada);
+            URI urlURI = new URI(domain);
             String url = urlURI.toASCIIString();
 
-            //System.out.println("Chegou aqui 1");
-
             Document doc = Jsoup.connect(url).userAgent("Mozilla").ignoreContentType(true).get();
-
-            // Document doc = Jsoup.connect(url).ignoreContentType(true).get();
 
             Elements links = doc.select("a[href]");
 
@@ -83,54 +77,15 @@ public class InputDomain {
     }
 
     private static File downloadArchive(String url) {
-        // Corrigir para abrir uma conexão e obter um InputStream
-        try (InputStream in = Codifier(url).openStream()) {
+        try (InputStream in = ValidateDataFormat.Codifier(url).openStream()) {
             byte[] fileBytes = IOUtils.toByteArray(in);
-            Path tempFilePath = Files.createTempFile("tempFile", extractFileExtension(url));
+            Path tempFilePath = Files.createTempFile("tempFile", ValidateDataFormat.extractFileExtension(url));
             Files.write(tempFilePath, fileBytes);
 
             return tempFilePath.toFile();
         } catch (IOException e) {
-            // Trate a exceção aqui, pode imprimir uma mensagem de erro ou fazer algo mais apropriado para sua aplicação.
             e.printStackTrace();
-            return null; // Ou outra ação apropriada para indicar que o download falhou
-        }
-    }
-
-
-    public static String extractFileExtension(String url) {
-        try {
-            URL urlObj = new URL(url);
-            String path = urlObj.getPath();
-            int lastDotIndex = path.lastIndexOf('.');
-
-            if (lastDotIndex != -1) {
-                return path.substring(lastDotIndex);
-            }
-        } catch (Exception e) {
-            e.printStackTrace(); // Trate exceções adequadamente em um ambiente de produção
-        }
-
-        return ""; // Se não encontrar a extensão, retorna uma string vazia ou outra indicação apropriada
-    }
-
-    private static URL Codifier(String url) {
-        try {
-
-            // Use URLEncoder para codificar a URL inteira, incluindo o caminho para o arquivo
-            String encodedURL = URLEncoder.encode(url, "UTF-8").replace("+", "%20");
-
-            // Construa a URI com a URL codificada
-            URL uri = new URL(encodedURL
-                    .replaceAll("%2F", "/")
-                    .replaceAll("%3A", ":")
-                    .replaceAll("%25", "%")
-            );
-            return uri;
-        } catch (MalformedURLException e) {
-            throw new RuntimeException(e);
-        } catch (UnsupportedEncodingException e) {
-            throw new RuntimeException(e);
+            return null;
         }
     }
 
