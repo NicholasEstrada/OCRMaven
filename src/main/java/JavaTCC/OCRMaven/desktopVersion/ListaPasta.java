@@ -1,9 +1,13 @@
 package JavaTCC.OCRMaven.desktopVersion;
 
+import JavaTCC.OCRMaven.ArquivoBase;
 import JavaTCC.OCRMaven.SensitiveDataFinder;
 
 import java.io.File;
 import java.io.IOException;
+
+import static JavaTCC.OCRMaven.ValidateDataFormat.isImage;
+import static JavaTCC.OCRMaven.ValidateDataFormat.isPDF;
 
 public class ListaPasta {
 	public static String local;
@@ -29,26 +33,36 @@ public class ListaPasta {
 	public static void recursivo(File arquivos, String diretorio) {
 		if (arquivos.isDirectory() == true) {
 			String diretorio1 = diretorio + "\\" + arquivos.getName();
+
 			File file1 = new File(diretorio1);
 			File afile1[] = file1.listFiles();
+
 			int i1 = 0;
 			for (int j1 = afile1.length; i1 < j1; i1++) {
 				File arquivos1 = afile1[i1];
 				if (arquivos1.isDirectory() == true) {
 					recursivo(arquivos1, diretorio1);
 				} else {
-					String o = diretorio1 + "\\" + arquivos1.getName();
+					String localArquivoDir = diretorio1 + "\\" + arquivos1.getName();
 					@SuppressWarnings("unused")
-					SensitiveDataFinder l;
+					SensitiveDataFinder lerArquivo;
 
 					try {
 						if (tipoAceito(arquivos1.getName()) == true) {
-							l = new SensitiveDataFinder(new File(o), "local");
-							local = o;
-							leitura = l.resultado;
+
+							String tipoArquivoBase = "";
+							if( isPDF(diretorio) ) tipoArquivoBase = "PDF";
+							if( isImage(diretorio) ) tipoArquivoBase = "Imagem/PDF Imagem";
+
+							File file = new File(localArquivoDir);
+							ArquivoBase arquivoBase = new ArquivoBase(file, tipoArquivoBase, "OCR", localArquivoDir);
+
+							lerArquivo = new SensitiveDataFinder(arquivoBase);
+							local = localArquivoDir;
+							leitura = lerArquivo.resultado;
 							System.out.println(leitura + " " + local);
 						} else {
-							local = o;
+							local = localArquivoDir;
 							leitura = "Tipo não aceito";
 							System.out.println(leitura + " " + local);
 						}
@@ -59,15 +73,22 @@ public class ListaPasta {
 				}
 			}
 		} else {
-			String o = diretorio + "\\" + arquivos.getName();
+			String localArquivoDir = diretorio + "\\" + arquivos.getName();
 			@SuppressWarnings("unused")
-			SensitiveDataFinder l;
+			SensitiveDataFinder lerArquivo;
 
 			try {
 				if (tipoAceito(arquivos.getName()) == true) {
-					l = new SensitiveDataFinder(new File(o), "local");
-					local = o;
-					leitura = l.resultado;
+
+					String tipoArquivoBase = "";
+					if( isPDF(diretorio) ) tipoArquivoBase = "PDF";
+					if( isImage(diretorio) ) tipoArquivoBase = "Imagem/PDF Imagem";
+
+					File file = new File(localArquivoDir);
+					ArquivoBase arquivoBase = new ArquivoBase(file, tipoArquivoBase, "OCR",  localArquivoDir);
+					lerArquivo = new SensitiveDataFinder(arquivoBase);
+					local = localArquivoDir;
+					leitura = lerArquivo.resultado;
 					System.out.println(leitura + " " + local);
 
 				} else {
@@ -82,18 +103,10 @@ public class ListaPasta {
 	}
 
 	private static boolean tipoAceito(String name) {
-		// TODO Auto-generated method stub
-		int tip = name.indexOf(".");
-		String[] ary = name.split("");
-		String tipo = "";
 
-		for (int i = (tip + 1); i < name.length(); i++) {
-			String ss = ary[i].toLowerCase(); // AQUIIII AAAAAA HELP
-			char c = ss.charAt(0);
-			tipo = tipo + c;
-		}
+		name = name.toLowerCase();
 
-		if (tipo.equals("pdf") || tipo.equals("tif") || tipo.equals("png") || tipo.equals("jpg")) {
+		if (name.endsWith(".pdf") || name.endsWith("tif") || name.endsWith("png") || name.endsWith("jpg")) {
 			return true;
 		} else {
 			return false;

@@ -97,4 +97,13 @@ public interface ValidateDataFormat {
             throw new RuntimeException(e);
         }
     }
+
+    static boolean isPDF(String url) {
+        return url.toLowerCase().endsWith(".pdf");
+    }
+
+    static boolean isImage(String url) {
+        String lowercaseUrl = url.toLowerCase();
+        return lowercaseUrl.endsWith(".jpeg") || lowercaseUrl.endsWith(".jpg") || lowercaseUrl.endsWith(".png");
+    }
 }

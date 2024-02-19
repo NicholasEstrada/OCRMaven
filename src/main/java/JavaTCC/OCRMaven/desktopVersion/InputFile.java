@@ -1,11 +1,15 @@
 package JavaTCC.OCRMaven.desktopVersion;
 
+import JavaTCC.OCRMaven.ArquivoBase;
 import JavaTCC.OCRMaven.SensitiveDataFinder;
 
 import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import java.io.File;
 import java.io.IOException;
+
+import static JavaTCC.OCRMaven.ValidateDataFormat.isImage;
+import static JavaTCC.OCRMaven.ValidateDataFormat.isPDF;
 
 public class InputFile extends JFrame{
 	/**
@@ -26,9 +30,14 @@ public InputFile() {
             if (retorno == JFileChooser.APPROVE_OPTION){
                 String caminho = choose.getSelectedFile().getAbsolutePath();
                 try {
-                    SensitiveDataFinder le = new SensitiveDataFinder(new File(caminho), "local");
+                    String tipoArquivoBase = "";
+                    if( isPDF(caminho) ) tipoArquivoBase = "PDF";
+                    if( isImage(caminho) ) tipoArquivoBase = "Imagem/PDF Imagem";
+                    File file = new File(caminho);
+                    ArquivoBase arquivoBase = new ArquivoBase(file, tipoArquivoBase, "OCR", "");
+                    SensitiveDataFinder le = new SensitiveDataFinder(arquivoBase);
 
-                JOptionPane.showMessageDialog(null, le.resultado);
+                    JOptionPane.showMessageDialog(null, le.resultado);
                 } catch (IOException e) {
                     // TODO Auto-generated catch block
                     e.printStackTrace();

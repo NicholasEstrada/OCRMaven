@@ -1,5 +1,6 @@
 package JavaTCC.OCRMaven.webVersion;
 
+import JavaTCC.OCRMaven.ArquivoBase;
 import JavaTCC.OCRMaven.SensitiveDataFinder;
 import JavaTCC.OCRMaven.ValidateDataFormat;
 import org.apache.commons.io.IOUtils;
@@ -15,8 +16,7 @@ import java.io.UnsupportedEncodingException;
 import java.net.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 
 public class InputDomain implements ValidateDataFormat {
 
@@ -25,20 +25,16 @@ public class InputDomain implements ValidateDataFormat {
     private static final Set<String> visitedPDFs = new HashSet<>();
     private static final Set<String> visitedImages = new HashSet<>();
 
-    public static void main(String[] args) throws UnsupportedEncodingException {
-        String domain = "https://www.camarapoa.rs.gov.br"; // Substitua pelo domínio do site que você deseja vasculhar
-
-        crawl(domain);
-    }
-
-
-    private static void crawl(String domain) throws UnsupportedEncodingException {
+    private static List<String> InvetorDataSensetive(String domain) throws UnsupportedEncodingException {
         try {
-            if (visitedUrls.contains(domain)) {
-                return;
-            }
 
+            if (visitedUrls.contains(domain)) {
+                return null;
+            }
             visitedUrls.add(domain);
+
+
+            List<String> dadosColetados = new ArrayList<>();
 
             URI urlURI = new URI(domain);
             String url = urlURI.toASCIIString();
@@ -50,30 +46,50 @@ public class InputDomain implements ValidateDataFormat {
             for (Element link : links) {
 
                 String href = link.attr("abs:href");
-                if (isPDF(href) || isImage(href)) {
+                if (ValidateDataFormat.isPDF(href) || ValidateDataFormat.isImage(href)) {
 
                     if (!visitedPDFs.contains(href)) {
 
                         visitedPDFs.add(href);
 
-                        System.out.println("Encontrado PDF: " + href);
+                        // PARTE DO RETURN 1 #pathLocation
+                        System.out.println("Encontrado PDF: " + href.replaceAll(" ", "%20"));
 
-                        try (SensitiveDataFinder lerImagem = new SensitiveDataFinder(downloadArchive(href), "local")) {
+                        // fazer taratamento tipoProcessamento
+
+                        ArquivoBase arquivoBase = new ArquivoBase(downloadArchive(href), "", "OCR", href);
+
+                        if( ValidateDataFormat.isPDF(href) ) arquivoBase.tipoArquivo = "PDF";
+                        if( ValidateDataFormat.isImage(href) ) arquivoBase.tipoArquivo = "Imagem/PDF Imagem";
+
+                        try{
+                            SensitiveDataFinder lerImagem = new SensitiveDataFinder(arquivoBase);
+
+                            // PARTE DO RETURN 2 #sensetive
+                            // COMO CONDUZIR O PROCESSAMENTO APOS A TRASLADAÇÃO PARA A API?
+                            // COMO ESSA EXPRESSÃO VAI SER IMPLEMENTADA AQUI, NA API SER SALVA NO BANCO DE DADOS
+
                             System.out.println(lerImagem.resultado);
+                            dadosColetados.add(lerImagem.resultado);
+
                         } catch (Exception e) {
                             e.printStackTrace();
                         }
 
                     }
                 }else if (href.startsWith(String.valueOf(url))) {
-                    crawl(href);
+                    InvetorDataSensetive(href);
                 }
             }
+
+            return dadosColetados;
+
         } catch (IOException e) {
             e.printStackTrace();
         } catch (URISyntaxException e) {
             throw new RuntimeException(e);
         }
+        return null;
     }
 
     private static File downloadArchive(String url) {
@@ -89,16 +105,9 @@ public class InputDomain implements ValidateDataFormat {
         }
     }
 
-    private static boolean isPDF(String url) {
-        return url.toLowerCase().endsWith(".pdf");
+    public static void main(String[] args) throws UnsupportedEncodingException {
+        String domain = "https://www.camarapoa.rs.gov.br"; // Substitua pelo domínio do site que você deseja vasculhar
+
+        InvetorDataSensetive(domain);
     }
-
-    private static boolean isImage(String url) {
-        String lowercaseUrl = url.toLowerCase();
-        return lowercaseUrl.endsWith(".jpeg") || lowercaseUrl.endsWith(".jpg") || lowercaseUrl.endsWith(".png");
-        // Adicione outros formatos de imagem suportados aqui, se necessário
-    }
-
-
-
 }
