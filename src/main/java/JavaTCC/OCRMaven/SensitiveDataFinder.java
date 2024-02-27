@@ -16,32 +16,33 @@ public class SensitiveDataFinder implements Closeable, DataInspector {
 	public String resultado;
 
 	public SensitiveDataFinder( ArquivoBase arquivoBase /* File args, String type */) throws IOException{
+
+		if ( arquivoBase.tipoProcessamento.equals("PDFText") ) {
+
+			try {
+				String result = extractTextFromPDF(arquivoBase.pathLocation);
+				if ( result.equals("") ) {
+					arquivoBase.tipoProcessamento = "OCR";
+					arquivoBase.tipoArquivo = "Imagem/PDF Imagem";
+				}else {
+					resultado = "Email:" + DataInspector.procuraEmail(result, 0) + "|CPF:" + DataInspector.procuraCPF(result, 0) + "|pathLocation:" + arquivoBase.pathLocation;
+				}
+			} catch (IOException e) {
+				System.err.println(e.getMessage());
+			}
+		}
+
 		if ( arquivoBase.tipoProcessamento.equals("OCR") ) {
 			Tesseract tess4j = new Tesseract();
 			// tess path location ATUALIZAR EM CASO DE TROCA DE AREA DE DESENVOLVIMENTO
 			tess4j.setDatapath("C:\\Users\\Nicholas\\git\\OCRMaven\\tessdata");
 			try {
 				String result = tess4j.doOCR(arquivoBase.arquivo);
-				resultado = " Email: " + DataInspector.procuraEmail(result, 0) + " CPF: " + DataInspector.procuraCPF(result, 0);
-
+				resultado = "Email:" + DataInspector.procuraEmail(result, 0) + "|CPF:" + DataInspector.procuraCPF(result, 0) + "|pathLocation:" + arquivoBase.pathLocation;
 			} catch (TesseractException e) {
 				System.err.println(e.getMessage());
 			}
-
 		}
-
-		if ( arquivoBase.tipoProcessamento.equals("Imagem/PDF Imagem") ) {
-
-			try {
-				String result = extractTextFromPDF(arquivoBase.pathLocation);
-				resultado = " Email: " + DataInspector.procuraEmail(result, 0) + " CPF: " + DataInspector.procuraCPF(result, 0) + " de " +  arquivoBase.pathLocation;
-
-			} catch (IOException e) {
-				System.err.println(e.getMessage());
-			}
-
-		}
-
 	}
 
 	private static String extractTextFromPDF(String url) throws IOException {
@@ -55,6 +56,8 @@ public class SensitiveDataFinder implements Closeable, DataInspector {
 				String text = pdfStripper.getText(document);
 
 				document.close();
+
+				if(text.trim().isEmpty()) return "";
 
 				return text;
 

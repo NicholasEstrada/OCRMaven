@@ -5,6 +5,8 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.text.DecimalFormat;
+import java.util.Arrays;
+import java.util.List;
 
 public interface ValidateDataFormat {
 
@@ -103,7 +105,18 @@ public interface ValidateDataFormat {
     }
 
     static boolean isImage(String url) {
+
+        List<String> IMAGE_EXTENSIONS = Arrays.asList(
+                ".bmp", ".gif", ".jpg", ".jpeg", ".png", ".tiff", ".tif", ".ico", ".webp"
+        );
+
         String lowercaseUrl = url.toLowerCase();
-        return lowercaseUrl.endsWith(".jpeg") || lowercaseUrl.endsWith(".jpg") || lowercaseUrl.endsWith(".png");
+
+        for (String extension : IMAGE_EXTENSIONS) {
+            if (lowercaseUrl.endsWith(extension)) {
+                return true;
+            }
+        }
+        return false;
     }
 }
