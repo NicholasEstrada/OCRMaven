@@ -5,16 +5,21 @@ import java.io.File;
 public class ArquivoBase {
     // File args, String type
     public File arquivo;
-    public String tipoArquivo;
+    public String extensaoArquivo;
     public String tipoProcessamento;
     public String pathLocation;
 
-    public ArquivoBase(File arquivo, String tipoArquivo, String tipoProcessamento, String pathLocation) {
+    public ArquivoBase(File arquivo, String tipoProcessamento, String pathLocation) {
         this.arquivo = arquivo;
-        this.tipoArquivo = tipoArquivo;
-        this.tipoProcessamento = tipoProcessamento;
-        this.pathLocation = pathLocation;
-    }
+        this.tipoProcessamento = tipoProcessamento; // via OCR em caso de imagens e etc
+        this.pathLocation = pathLocation + "\\" +arquivo.getName(); // localizacao do arquivo
 
-    // fazer funções aplicadas a mais; como dar o tamanho do arquivo
+        String nomeArquivo = arquivo.getName();
+        int posicaoPonto = nomeArquivo.lastIndexOf('.');
+        if (posicaoPonto > 0) {
+            this.extensaoArquivo = nomeArquivo.substring(posicaoPonto + 1);
+        } else {
+            throw new IllegalArgumentException("O arquivo não possui uma extensão.");
+        }
+    }
 }

@@ -1,7 +1,9 @@
 package JavaTCC.OCRMaven;
 
 import java.io.*;
-import java.net.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 import net.sourceforge.tess4j.Tesseract;
 import net.sourceforge.tess4j.TesseractException;
@@ -15,57 +17,86 @@ public class SensitiveDataFinder implements Closeable, DataInspector {
 	// #2 MELHORAR RASPAGEM PARA APLICAR THREADS EM VALIDAÇÕES CONCORRENTE E QUE POSSAM SER CONCORRENTES
 	public String resultado;
 
-	public SensitiveDataFinder( ArquivoBase arquivoBase /* File args, String type */) throws IOException{
+	public SensitiveDataFinder( ArquivoBase arquivoBase) throws IOException{
 
-		if ( arquivoBase.tipoProcessamento.equals("PDFText") ) {
+		if (arquivoBase.tipoProcessamento.isEmpty()) {
 
-			try {
-				String result = extractTextFromPDF(arquivoBase.pathLocation);
-				if ( result.equals("") ) {
-					arquivoBase.tipoProcessamento = "OCR";
-					arquivoBase.tipoArquivo = "Imagem/PDF Imagem";
-				}else {
-					resultado = "Email:" + DataInspector.procuraEmail(result, 0) + "|CPF:" + DataInspector.procuraCPF(result, 0) + "|pathLocation:" + arquivoBase.pathLocation;
-				}
-			} catch (IOException e) {
-				System.err.println(e.getMessage());
-			}
-		}
+			String result = "";
+
+            try{
+                result = extractTextFromPDF(arquivoBase.pathLocation);
+				arquivoBase.tipoProcessamento = "PDFText";
+            }catch(Exception e){
+                System.err.println(e.getMessage());
+            }
+
+            if ( result == null || result.isEmpty()) {
+                arquivoBase.tipoProcessamento = "OCR";
+            }else{
+                resultado = "|Email:" + DataInspector.procuraEmail(result, 0) +
+                            "|CPF:" + DataInspector.procuraCPF(result, 0)+
+							"|OpiniaoPolitica:" + DataInspector.ProcuraOpiniaoPolitica(result)+
+                            "|Extensao:" + arquivoBase.extensaoArquivo +
+                            "|tipoProcessamento:" + arquivoBase.tipoProcessamento +
+                            "|pathLocation:" + arquivoBase.pathLocation;
+            }
+        }
 
 		if ( arquivoBase.tipoProcessamento.equals("OCR") ) {
 			Tesseract tess4j = new Tesseract();
 			// tess path location ATUALIZAR EM CASO DE TROCA DE AREA DE DESENVOLVIMENTO
-			tess4j.setDatapath("C:\\Users\\Nicholas\\git\\OCRMaven\\tessdata");
+			tess4j.setDatapath("C:\\Users\\Nicholas\\Dev\\TCC\\Back-End\\OCRMaven\\tessdata");
 			try {
 				String result = tess4j.doOCR(arquivoBase.arquivo);
-				resultado = "Email:" + DataInspector.procuraEmail(result, 0) + "|CPF:" + DataInspector.procuraCPF(result, 0) + "|pathLocation:" + arquivoBase.pathLocation;
+				resultado = "|Email:" + DataInspector.procuraEmail(result, 0) +
+							"|CPF:" + DataInspector.procuraCPF(result, 0)+
+							"|OpiniaoPolitica:" + DataInspector.ProcuraOpiniaoPolitica(result)+
+							"|Extensao:" + arquivoBase.extensaoArquivo +
+							"|tipoProcessamento:" + arquivoBase.tipoProcessamento +
+							"|pathLocation:" + arquivoBase.pathLocation;
 			} catch (TesseractException e) {
 				System.err.println(e.getMessage());
 			}
 		}
 	}
 
-	private static String extractTextFromPDF(String url) throws IOException {
-
-			// Abra a conexão com a URI e obtenha um fluxo de entrada
-			try (InputStream in = new BufferedInputStream(ValidateDataFormat.Codifier(url).openStream())) {
-
-				PDDocument document = PDDocument.load(in);
-
-				PDFTextStripper pdfStripper = new PDFTextStripper();
-				String text = pdfStripper.getText(document);
-
-				document.close();
-
-				if(text.trim().isEmpty()) return "";
-
-				return text;
-
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-        return url;
+	private static String extractTextFromPDF(String urlOrFilePath) throws IOException {
+		if(urlOrFilePath.matches("^(https?|ftp)://.*$")) {
+			return extractTextFromURL(urlOrFilePath);
+		} else {
+			return extractTextFromFile(urlOrFilePath);
+		}
     }
+
+	private static String extractTextFromURL(String url) throws IOException {
+		try (InputStream in = new BufferedInputStream(ValidateDataFormat.Codifier(url).openStream())) {
+			return extractTextFromStream(in);
+		}
+	}
+
+	private static String extractTextFromFile(String filePath) throws IOException {
+		Path path = Paths.get(filePath);
+		try (InputStream in = Files.newInputStream(path)) {
+			return extractTextFromStream(in);
+		} catch (IOException e) {
+			System.out.println("Erro ao ler arquivo: " + e.getMessage());
+		}
+		return null;
+	}
+
+
+
+	private static String extractTextFromStream(InputStream in) throws IOException {
+		PDDocument document = PDDocument.load(in);
+		PDFTextStripper pdfStripper = new PDFTextStripper();
+		String text = pdfStripper.getText(document);
+		document.close();
+
+		if (text.trim().isEmpty()) {
+			return "";
+		}
+		return text;
+	}
 
 	@Override
 	public void close() throws IOException {

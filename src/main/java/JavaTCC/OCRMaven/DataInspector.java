@@ -44,8 +44,8 @@ public interface DataInspector extends ValidateDataFormat {
         for (i = 0; i < regexes.length; i++) {
             String matchCPF = FounderRecursiveCPF(regexes[i], result, inicio);
             if (matchCPF != null && !matchCPF.isEmpty()) {
-                if (cpfs_achados.length() > 0) {
-                    cpfs_achados.append("; ");
+                if (!cpfs_achados.isEmpty()) {
+                    cpfs_achados.append(";");
                 }
                 cpfs_achados.append(matchCPF);
             }
@@ -73,7 +73,7 @@ public interface DataInspector extends ValidateDataFormat {
                 }
 
                 if (hasMatch) {
-                    result.append("; ");
+                    result.append(";");
                 }
                 result.append(cpf);
 
@@ -87,5 +87,9 @@ public interface DataInspector extends ValidateDataFormat {
         }
 
         return result.toString();
+    }
+
+    static String ProcuraOpiniaoPolitica(String input){
+        return "";
     }
 }

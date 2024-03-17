@@ -24,8 +24,7 @@ public class InputDomain implements ValidateDataFormat {
 
 
     private static final Set<String> visitedUrls = new HashSet<>();
-    private static final Set<String> visitedPDFs = new HashSet<>();
-    private static final Set<String> visitedImages = new HashSet<>();
+    private static final Set<String> visitedArchives = new HashSet<>();
 
     private static final ExecutorService threadPool = Executors.newFixedThreadPool(5); // Limite de 10 threads
 
@@ -53,24 +52,15 @@ public class InputDomain implements ValidateDataFormat {
                 String href = link.attr("abs:href");
                 if (ValidateDataFormat.isPDF(href) || ValidateDataFormat.isImage(href)) {
 
-                    if (!visitedPDFs.contains(href)) {
+                    if (!visitedArchives.contains(href)) {
 
-                        visitedPDFs.add(href);
+                        visitedArchives.add(href);
 
                         // PARTE DO RETURN 1 #pathLocation
                         System.out.println("Encontrado PDF: " + href.replaceAll(" ", "%20"));
 
-                        ArquivoBase arquivoBase = new ArquivoBase(downloadArchive(href), "", "", href);
+                        ArquivoBase arquivoBase = new ArquivoBase(Objects.requireNonNull(downloadArchive(href)), "", href);
 
-                        // fazer taratamento tipoProcessamento
-                        if( ValidateDataFormat.isPDF(href) ) {
-                            arquivoBase.tipoArquivo = "PDF";
-                            arquivoBase.tipoProcessamento = "PDFText";
-                        }
-                        if( ValidateDataFormat.isImage(href) ) {
-                            arquivoBase.tipoArquivo = "Imagem/PDF Imagem";
-                            arquivoBase.tipoProcessamento = "OCR";
-                        }
 
                         threadPool.submit(() -> {
                             try{
