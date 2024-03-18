@@ -90,14 +90,13 @@ public class SensitiveDataFinder implements Closeable, DataInspector {
 
 
 	private static String extractTextFromStream(InputStream in) throws IOException {
-		System.out.println("OTEXTOOOO" + in.toString());
 		PDDocument document = PDDocument.load(in);
 		PDFTextStripper pdfStripper = new PDFTextStripper();
 		String text = pdfStripper.getText(document);
 		document.close();
 
 		if (text.trim().isEmpty()) return "";
-
+		
 		return text;
 	}
 
