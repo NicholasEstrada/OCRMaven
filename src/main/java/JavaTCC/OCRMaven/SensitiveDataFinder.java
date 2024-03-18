@@ -53,7 +53,7 @@ public class SensitiveDataFinder implements Closeable, DataInspector {
 							"|OpiniaoPolitica:" + DataInspector.ProcuraOpiniaoPolitica(result)+
 							"|Extensao:" + arquivoBase.extensaoArquivo +
 							"|tipoProcessamento:" + arquivoBase.tipoProcessamento +
-							"|pathLocation:" + arquivoBase.pathLocation;
+							"|pathLocation:" + arquivoBase.pathLocation.replaceAll("\\\\tempFile.*","");
 			} catch (TesseractException e) {
 				System.err.println(e.getMessage());
 			}
@@ -71,8 +71,11 @@ public class SensitiveDataFinder implements Closeable, DataInspector {
 	private static String extractTextFromURL(String url) throws IOException {
 		try (InputStream in = new BufferedInputStream(ValidateDataFormat.Codifier(url).openStream())) {
 			return extractTextFromStream(in);
+		}catch (EOFException e){
+			System.out.println(e.getMessage());
 		}
-	}
+        return url;
+    }
 
 	private static String extractTextFromFile(String filePath) throws IOException {
 		Path path = Paths.get(filePath);
@@ -87,14 +90,14 @@ public class SensitiveDataFinder implements Closeable, DataInspector {
 
 
 	private static String extractTextFromStream(InputStream in) throws IOException {
+		System.out.println("OTEXTOOOO" + in.toString());
 		PDDocument document = PDDocument.load(in);
 		PDFTextStripper pdfStripper = new PDFTextStripper();
 		String text = pdfStripper.getText(document);
 		document.close();
 
-		if (text.trim().isEmpty()) {
-			return "";
-		}
+		if (text.trim().isEmpty()) return "";
+
 		return text;
 	}
 
