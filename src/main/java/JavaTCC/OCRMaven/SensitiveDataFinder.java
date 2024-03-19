@@ -24,7 +24,7 @@ public class SensitiveDataFinder implements Closeable, DataInspector {
 			String result = "";
 
             try{
-                result = extractTextFromPDF(arquivoBase.pathLocation);
+                result = extractTextFromStream(arquivoBase.arquivo);
 				arquivoBase.tipoProcessamento = "PDFText";
             }catch(Exception e){
                 System.err.println(e.getMessage());
@@ -60,44 +60,17 @@ public class SensitiveDataFinder implements Closeable, DataInspector {
 		}
 	}
 
-	private static String extractTextFromPDF(String urlOrFilePath) throws IOException {
-		if(urlOrFilePath.matches("^(https?|ftp)://.*$")) {
-			return extractTextFromURL(urlOrFilePath);
-		} else {
-			return extractTextFromFile(urlOrFilePath);
+	private static String extractTextFromStream(File file) throws IOException {
+		try (InputStream in = new BufferedInputStream(new FileInputStream(file))) {
+			PDDocument document = PDDocument.load(in);
+			PDFTextStripper pdfStripper = new PDFTextStripper();
+			String text = pdfStripper.getText(document);
+			document.close();
+
+			if (text.trim().isEmpty()) return "";
+
+			return text;
 		}
-    }
-
-	private static String extractTextFromURL(String url) throws IOException {
-		try (InputStream in = new BufferedInputStream(ValidateDataFormat.Codifier(url).openStream())) {
-			return extractTextFromStream(in);
-		}catch (EOFException e){
-			System.out.println(e.getMessage());
-		}
-        return url;
-    }
-
-	private static String extractTextFromFile(String filePath) throws IOException {
-		Path path = Paths.get(filePath);
-		try (InputStream in = Files.newInputStream(path)) {
-			return extractTextFromStream(in);
-		} catch (IOException e) {
-			System.out.println("Erro ao ler arquivo: " + e.getMessage());
-		}
-		return null;
-	}
-
-
-
-	private static String extractTextFromStream(InputStream in) throws IOException {
-		PDDocument document = PDDocument.load(in);
-		PDFTextStripper pdfStripper = new PDFTextStripper();
-		String text = pdfStripper.getText(document);
-		document.close();
-
-		if (text.trim().isEmpty()) return "";
-		
-		return text;
 	}
 
 	@Override
