@@ -47,13 +47,17 @@ public class SensitiveDataFinder implements Closeable, DataInspector {
 			// tess path location ATUALIZAR EM CASO DE TROCA DE AREA DE DESENVOLVIMENTO
 			tess4j.setDatapath("C:\\Users\\Nicholas\\Dev\\TCC\\Back-End\\OCRMaven\\tessdata");
 			try {
-				String result = tess4j.doOCR(arquivoBase.arquivo);
-				resultado = "|Email:" + DataInspector.procuraEmail(result, 0) +
-							"|CPF:" + DataInspector.procuraCPF(result, 0)+
-							"|OpiniaoPolitica:" + DataInspector.ProcuraOpiniaoPolitica(result)+
+				if(arquivoBase.arquivo.length() > 0) {
+					String result = tess4j.doOCR(arquivoBase.arquivo); // at JavaTCC.OCRMaven.SensitiveDataFinder.<init>(SensitiveDataFinder.java:50)
+					resultado = "|Email:" + DataInspector.procuraEmail(result, 0) +
+							"|CPF:" + DataInspector.procuraCPF(result, 0) +
+							"|OpiniaoPolitica:" + DataInspector.ProcuraOpiniaoPolitica(result) +
 							"|Extensao:" + arquivoBase.extensaoArquivo +
 							"|tipoProcessamento:" + arquivoBase.tipoProcessamento +
-							"|pathLocation:" + arquivoBase.pathLocation.replaceAll("\\\\tempFile.*","");
+							"|pathLocation:" + arquivoBase.pathLocation.replaceAll("\\\\tempFile.*", "");
+				}else{
+					System.err.println("Arquivo PDF vazio ou corrompido: " + arquivoBase.arquivo.getName());
+				}
 			} catch (TesseractException e) {
 				System.err.println(e.getMessage());
 			}
@@ -61,17 +65,13 @@ public class SensitiveDataFinder implements Closeable, DataInspector {
 	}
 
 	private static String extractTextFromStream(File file) throws IOException {
-		try (InputStream in = new BufferedInputStream(new FileInputStream(file))) {
-			PDDocument document = PDDocument.load(in);
+		try (PDDocument document = PDDocument.load(file)) {
 			PDFTextStripper pdfStripper = new PDFTextStripper();
 			String text = pdfStripper.getText(document);
-			document.close();
-
-			if (text.trim().isEmpty()) return "";
-
-			return text;
+			return text.trim();
 		}
 	}
+
 
 	@Override
 	public void close() throws IOException {

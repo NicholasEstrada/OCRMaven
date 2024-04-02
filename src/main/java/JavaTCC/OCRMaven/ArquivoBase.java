@@ -12,7 +12,7 @@ public class ArquivoBase {
     public ArquivoBase(File arquivo, String tipoProcessamento, String pathLocation) {
         this.arquivo = arquivo;
         this.tipoProcessamento = tipoProcessamento; // via OCR em caso de imagens e etc
-        this.pathLocation = pathLocation + "\\" +arquivo.getName(); // localizacao do arquivo
+        this.pathLocation = pathLocation + "\\" +arquivo.getName();//.replaceAll("\\\\tempFile\\d+", ""); // localizacao do arquivo
 
         String nomeArquivo = arquivo.getName();
         int posicaoPonto = nomeArquivo.lastIndexOf('.');
