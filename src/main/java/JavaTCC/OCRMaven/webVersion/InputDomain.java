@@ -9,12 +9,11 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.UnsupportedEncodingException;
+import java.io.*;
+import java.net.HttpURLConnection;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
@@ -54,26 +53,40 @@ public class InputDomain implements ValidateDataFormat {
         try {
             URI urlURI = new URI(domain); // ver a partir daqui o problema da iteração ##
             String url = urlURI.toASCIIString();
-            Document doc = Jsoup.connect(url)
-                                .referrer(domain)
-                                .userAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3")
-                                .ignoreContentType(true)
-                                .get();  // at JavaTCC.OCRMaven.webVersion.InputDomain.InvetorDataSensetive(InputDomain.java:60)
-            Elements links = doc.select("a[href]");
+            HttpURLConnection connection = (HttpURLConnection) new URL(url).openConnection();
+            connection.setRequestMethod("GET");
+            connection.setRequestProperty("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3");
 
-            for (Element link : links) {
-                String href = link.attr("abs:href");
-                if ((ValidateDataFormat.isPDF(href) || ValidateDataFormat.isImage(href) && href.contains(domain.replaceAll("https?://","")))) {
-                    if (!visitedArchives.contains(href)) {
-                        // dadosColetados.add(href);
-                        visitedArchives.add(href);
-                        threadPool.submit(() -> dadosColetados.add(processArchive(href))); // at JavaTCC.OCRMaven.webVersion.InputDomain.lambda$InvetorDataSensetive$0(InputDomain.java:70)
-
-                        Thread.sleep(10); // COM ISSO NAO FUNCIONOU
-                    }
-                } else if (href.startsWith(String.valueOf(url))) {
-                    InvetorDataSensetive(href, depth + 1);
+            // Verificar se a resposta foi bem sucedida
+            if (connection.getResponseCode() == HttpURLConnection.HTTP_OK) {
+                // Ler a resposta da conexão
+                BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+                StringBuilder response = new StringBuilder();
+                String inputLine;
+                while ((inputLine = in.readLine()) != null) {
+                    response.append(inputLine);
                 }
+                in.close();
+
+                // Criar um documento Jsoup a partir do conteúdo da resposta
+                Document doc = Jsoup.parse(response.toString());
+                Elements links = doc.select("a[href]");
+
+                for (Element link : links) {
+                    String href = link.attr("abs:href");
+                    if ((ValidateDataFormat.isPDF(href) || ValidateDataFormat.isImage(href) && href.contains(domain.replaceAll("https?://","")))) {
+                        if (!visitedArchives.contains(href)) {
+                            visitedArchives.add(href);
+                            threadPool.submit(() -> dadosColetados.add(processArchive(href)));
+                            Thread.sleep(10); // Adiciona um pequeno atraso
+                        }
+                    } else if (href.startsWith(String.valueOf(url))) {
+                        InvetorDataSensetive(href, depth + 1);
+                    }
+                }
+            } else {
+                // Tratar o caso em que a conexão não foi bem sucedida
+                System.out.println("Falha ao conectar à URL: " + url);
             }
         } catch (IOException | URISyntaxException | InterruptedException e) {
             logError("Error while processing URL: " + domain, e);
@@ -86,7 +99,6 @@ public class InputDomain implements ValidateDataFormat {
             ArquivoBase arquivoBase = new ArquivoBase(Objects.requireNonNull(downloadArchive(href)), "", href);
             SensitiveDataFinder sensitiveDataFinder = new SensitiveDataFinder(arquivoBase);
             String resultado = sensitiveDataFinder.resultado;
-            //System.out.println(resultado);
             sensitiveDataFinder.close();
             return resultado;
         } catch (Exception e) {

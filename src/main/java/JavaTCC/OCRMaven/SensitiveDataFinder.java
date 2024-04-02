@@ -60,6 +60,8 @@ public class SensitiveDataFinder implements Closeable, DataInspector {
 				}
 			} catch (TesseractException e) {
 				System.err.println(e.getMessage());
+			} finally {
+				tess4j = null;
 			}
 		}
 	}
@@ -75,7 +77,6 @@ public class SensitiveDataFinder implements Closeable, DataInspector {
 
 	@Override
 	public void close() throws IOException {
-
 	}
 
 }
