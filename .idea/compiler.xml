@@ -12,7 +12,7 @@
   </component>
   <component name="JavacSettings">
     <option name="ADDITIONAL_OPTIONS_OVERRIDE">
-      <module name="OCRMaven" options="--add-exports java.base/jdk.internal.access=ALL-UNNAMED" />
+      <module name="OCRMaven" options="" />
     </option>
   </component>
 </project>

@@ -33,8 +33,9 @@ public class InputDomain implements ValidateDataFormat {
         try {
             List<String> listadepdf = InvetorDataSensetive(domain, 0);
             threadPool.shutdown();
+            System.out.println("tamanho??: "+listadepdf.size());
             for (String content : listadepdf) {
-                System.out.println(content);
+                System.out.println("PRINTANDO: "+content);
             }
         }catch (UnsupportedEncodingException e){
             System.out.println("NAO PROCESSO PQQ: "+e.getMessage());
@@ -42,11 +43,11 @@ public class InputDomain implements ValidateDataFormat {
     }
 
     private static List<String> InvetorDataSensetive(String domain, int depth) throws UnsupportedEncodingException {
+        List<String> dadosColetados = new ArrayList<>();
         if (depth > MAX_DEPTH || visitedUrls.contains(domain)) {
-            return List.of(new String[0]);
+            return List.of(new String[0]); //dadosColetados;//
         }
 
-        List<String> dadosColetados = new ArrayList<>();
 
         visitedUrls.add(domain);
 
@@ -97,10 +98,13 @@ public class InputDomain implements ValidateDataFormat {
     private static String processArchive(String href) {
         try {
             ArquivoBase arquivoBase = new ArquivoBase(Objects.requireNonNull(downloadArchive(href)), "", href);
-            SensitiveDataFinder sensitiveDataFinder = new SensitiveDataFinder(arquivoBase);
-            String resultado = sensitiveDataFinder.resultado;
-            sensitiveDataFinder.close();
-            return resultado;
+            if(arquivoBase.arquivo.canExecute()) {
+                SensitiveDataFinder sensitiveDataFinder = new SensitiveDataFinder(arquivoBase);
+                String resultado = sensitiveDataFinder.resultado;
+                System.out.println("====> " + resultado);
+                sensitiveDataFinder.close();
+                return resultado;
+            }
         } catch (Exception e) {
             logError("Error while processing archive: " + href, e);
         }
