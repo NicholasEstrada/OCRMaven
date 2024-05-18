@@ -17,15 +17,13 @@ import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.*;
 
 public class InputDomain implements ValidateDataFormat {
 
-    private static final Set<String> visitedUrls = new HashSet<>();
-    private static final Set<String> visitedArchives = new HashSet<>();
-    private static final ExecutorService threadPool = Executors.newFixedThreadPool(10); // Limite de 5 threads
-
+    private static final Set<String> visitedUrls = Collections.synchronizedSet(new HashSet<>());
+    private static final Set<String> visitedArchives = Collections.synchronizedSet(new HashSet<>());
+    private static final ExecutorService threadPool = Executors.newFixedThreadPool(10); // Limite de 10 threads
     private static final int MAX_DEPTH = 4;
 
     public static void main(String[] args) throws UnsupportedEncodingException {
@@ -33,34 +31,32 @@ public class InputDomain implements ValidateDataFormat {
         try {
             List<String> listadepdf = InvetorDataSensetive(domain, 0);
             threadPool.shutdown();
-            System.out.println("tamanho??: "+listadepdf.size());
+            threadPool.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS); // Espera todas as tarefas terminarem
+            System.out.println("tamanho??: " + listadepdf.size());
             for (String content : listadepdf) {
-                System.out.println("PRINTANDO: "+content);
+                System.out.println("PRINTANDO: " + content);
             }
-        }catch (UnsupportedEncodingException e){
-            System.out.println("NAO PROCESSO PQQ: "+e.getMessage());
+        } catch (UnsupportedEncodingException | InterruptedException e) {
+            System.out.println("NAO PROCESSO PQQ: " + e.getMessage());
         }
     }
 
     private static List<String> InvetorDataSensetive(String domain, int depth) throws UnsupportedEncodingException {
-        List<String> dadosColetados = new ArrayList<>();
+        List<String> dadosColetados = Collections.synchronizedList(new ArrayList<>());
         if (depth > MAX_DEPTH || visitedUrls.contains(domain)) {
-            return List.of(new String[0]); //dadosColetados;//
+            return dadosColetados;
         }
-
 
         visitedUrls.add(domain);
 
         try {
-            URI urlURI = new URI(domain); // ver a partir daqui o problema da iteração ##
+            URI urlURI = new URI(domain);
             String url = urlURI.toASCIIString();
             HttpURLConnection connection = (HttpURLConnection) new URL(url).openConnection();
             connection.setRequestMethod("GET");
             connection.setRequestProperty("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3");
 
-            // Verificar se a resposta foi bem sucedida
             if (connection.getResponseCode() == HttpURLConnection.HTTP_OK) {
-                // Ler a resposta da conexão
                 BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
                 StringBuilder response = new StringBuilder();
                 String inputLine;
@@ -69,24 +65,40 @@ public class InputDomain implements ValidateDataFormat {
                 }
                 in.close();
 
-                // Criar um documento Jsoup a partir do conteúdo da resposta
                 Document doc = Jsoup.parse(response.toString());
                 Elements links = doc.select("a[href]");
 
+                List<String> archiveLinks = new ArrayList<>();
                 for (Element link : links) {
                     String href = link.attr("abs:href");
-                    if ((ValidateDataFormat.isPDF(href) || ValidateDataFormat.isImage(href) && href.contains(domain.replaceAll("https?://","")))) {
+                    if ((ValidateDataFormat.isPDF(href) || ValidateDataFormat.isImage(href)) && href.contains(domain.replaceAll("https?://", ""))) {
                         if (!visitedArchives.contains(href)) {
                             visitedArchives.add(href);
-                            threadPool.submit(() -> dadosColetados.add(processArchive(href)));
-                            Thread.sleep(10); // Adiciona um pequeno atraso
+                            archiveLinks.add(href);
+                            System.out.println("Arquivo encontrado: " + href); // Log para depuração
                         }
                     } else if (href.startsWith(String.valueOf(url))) {
-                        InvetorDataSensetive(href, depth + 1);
+                        System.out.println("Processando link: " + href); // Log para depuração
+                        dadosColetados.addAll(InvetorDataSensetive(href, depth + 1));
                     }
                 }
+
+                CountDownLatch latch = new CountDownLatch(archiveLinks.size());
+                for (String href : archiveLinks) {
+                    threadPool.submit(() -> {
+                        try {
+                            String resultado = processArchive(href);
+                            if (!resultado.isEmpty()) {
+                                dadosColetados.add(resultado);
+                                System.out.println("Resultado adicionado: " + resultado); // Log para depuração
+                            }
+                        } finally {
+                            latch.countDown();
+                        }
+                    });
+                }
+                latch.await(); // Espera todas as tarefas terminarem antes de continuar
             } else {
-                // Tratar o caso em que a conexão não foi bem sucedida
                 System.out.println("Falha ao conectar à URL: " + url);
             }
         } catch (IOException | URISyntaxException | InterruptedException e) {
@@ -98,10 +110,10 @@ public class InputDomain implements ValidateDataFormat {
     private static String processArchive(String href) {
         try {
             ArquivoBase arquivoBase = new ArquivoBase(Objects.requireNonNull(downloadArchive(href)), "", href);
-            if(arquivoBase.arquivo.canExecute()) {
+            if (arquivoBase.arquivo.canExecute()) {
                 SensitiveDataFinder sensitiveDataFinder = new SensitiveDataFinder(arquivoBase);
                 String resultado = sensitiveDataFinder.resultado;
-                System.out.println("====> " + resultado);
+                //System.out.println("====> " + resultado);
                 sensitiveDataFinder.close();
                 return resultado;
             }
