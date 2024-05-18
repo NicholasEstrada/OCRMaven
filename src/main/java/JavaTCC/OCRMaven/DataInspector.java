@@ -20,7 +20,7 @@ public interface DataInspector extends ValidateDataFormat {
             if (nextIndex < result.length()) {
                 String nextEmail = procuraEmail(result, nextIndex);
                 if (!nextEmail.isEmpty()) {
-                    email += "; " + nextEmail;
+                    email += ";" + nextEmail;
                 }
             }
         }

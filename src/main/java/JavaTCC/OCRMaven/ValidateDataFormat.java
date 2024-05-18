@@ -1,14 +1,15 @@
 package JavaTCC.OCRMaven;
 
+import java.io.IOException;
 import java.io.UnsupportedEncodingException;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.net.URLEncoder;
+import java.net.*;
+import java.nio.charset.StandardCharsets;
 import java.text.DecimalFormat;
 import java.util.Arrays;
 import java.util.List;
 
 public interface ValidateDataFormat {
+    static final int TIMEOUT = 50;
 
     static boolean validarCPF(String cpf) {
         // Remover caracteres especiais
@@ -84,7 +85,7 @@ public interface ValidateDataFormat {
         try {
 
             // Use URLEncoder para codificar a URL inteira, incluindo o caminho para o arquivo
-            String encodedURL = URLEncoder.encode(url, "UTF-8").replace("+", "%20");
+            String encodedURL = URLEncoder.encode(url, StandardCharsets.UTF_8).replace("+", "%20");
 
             // Construa a URI com a URL codificada
             URL uri = new URL(encodedURL
@@ -95,13 +96,37 @@ public interface ValidateDataFormat {
             return uri;
         } catch (MalformedURLException e) {
             throw new RuntimeException(e);
-        } catch (UnsupportedEncodingException e) {
-            throw new RuntimeException(e);
         }
     }
 
     static boolean isPDF(String url) {
         return url.toLowerCase().endsWith(".pdf");
+        /*
+        if(url.toLowerCase().endsWith(".pdf")) return true;
+        try {
+            HttpURLConnection connection = (HttpURLConnection) new URL(url).openConnection();
+            connection.setRequestMethod("HEAD");
+            connection.setRequestProperty("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3");
+            connection.setConnectTimeout(TIMEOUT);
+            connection.setReadTimeout(TIMEOUT);
+
+            String contentType = connection.getContentType();
+            return contentType != null && contentType.equals("application/pdf");
+        } catch (IOException e) {
+            System.out.println("Erro ao verificar o tipo de conteúdo: " + url + e);
+            return false;
+        }*/
+    }
+
+    static boolean isSupportedProtocol(String url) {
+        try {
+            URI uri = new URI(url);
+            String protocol = uri.getScheme();
+            return protocol != null && (protocol.equals("http") || protocol.equals("https"));
+        } catch (URISyntaxException e) {
+            System.out.println("Erro ao verificar o protocolo da URL: " + url + e);
+            return false;
+        }
     }
 
     static boolean isImage(String url) {

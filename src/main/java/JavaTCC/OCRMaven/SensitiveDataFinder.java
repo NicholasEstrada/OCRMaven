@@ -38,7 +38,7 @@ public class SensitiveDataFinder implements Closeable, DataInspector {
 							"|OpiniaoPolitica:" + DataInspector.ProcuraOpiniaoPolitica(result)+
                             "|Extensao:" + arquivoBase.extensaoArquivo +
                             "|tipoProcessamento:" + arquivoBase.tipoProcessamento +
-                            "|pathLocation:" + arquivoBase.pathLocation;
+                            "|pathLocation:" + arquivoBase.pathLocation.replaceAll("\\\\tempFile.*", "");
             }
         }
 
