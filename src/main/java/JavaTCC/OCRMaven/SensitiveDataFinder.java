@@ -33,12 +33,12 @@ public class SensitiveDataFinder implements Closeable, DataInspector {
             if ( result == null || result.isEmpty()) {
                 arquivoBase.tipoProcessamento = "OCR";
             }else{
-                resultado = "|Email:" + DataInspector.procuraEmail(result, 0) +
-                            "|CPF:" + DataInspector.procuraCPF(result, 0)+
-							"|OpiniaoPolitica:" + DataInspector.ProcuraOpiniaoPolitica(result)+
-                            "|Extensao:" + arquivoBase.extensaoArquivo +
-                            "|tipoProcessamento:" + arquivoBase.tipoProcessamento +
-                            "|pathLocation:" + arquivoBase.pathLocation.replaceAll("\\\\tempFile.*", "");
+                resultado = arquivoBase.pathLocation.replaceAll("\\\\tempFile.*", "") +
+							"|" + DataInspector.procuraEmail(result, 0) +
+                            "," + DataInspector.procuraCPF(result, 0) +
+							"," + DataInspector.ProcuraOpiniaoPolitica(result) +
+                            "|" + arquivoBase.extensaoArquivo +
+                            "|" + arquivoBase.tipoProcessamento;
             }
         }
 
@@ -49,12 +49,12 @@ public class SensitiveDataFinder implements Closeable, DataInspector {
 			try {
 				if(arquivoBase.arquivo.length() > 0) {
 					String result = tess4j.doOCR(arquivoBase.arquivo); // at JavaTCC.OCRMaven.SensitiveDataFinder.<init>(SensitiveDataFinder.java:50)
-					resultado = "|Email:" + DataInspector.procuraEmail(result, 0) +
-							"|CPF:" + DataInspector.procuraCPF(result, 0) +
-							"|OpiniaoPolitica:" + DataInspector.ProcuraOpiniaoPolitica(result) +
-							"|Extensao:" + arquivoBase.extensaoArquivo +
-							"|tipoProcessamento:" + arquivoBase.tipoProcessamento +
-							"|pathLocation:" + arquivoBase.pathLocation.replaceAll("\\\\tempFile.*", "");
+					resultado = arquivoBase.pathLocation.replaceAll("\\\\tempFile.*", "") +
+								"|" + DataInspector.procuraEmail(result, 0) +
+								"," + DataInspector.procuraCPF(result, 0) +
+								"," + DataInspector.ProcuraOpiniaoPolitica(result) +
+								"|" + arquivoBase.extensaoArquivo +
+								"|" + arquivoBase.tipoProcessamento;
 				}else{
 					System.err.println("Arquivo PDF vazio ou corrompido: " + arquivoBase.arquivo.getName());
 				}

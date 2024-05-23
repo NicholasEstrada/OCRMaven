@@ -29,13 +29,20 @@ public class InputDomain implements ValidateDataFormat {
     private static final int TIMEOUT = 5000;
 
     private static final int MAX_DEPTH = 4;
-    private static final String DOMINIO_DEPTH = "ifc.edu.br";
+    private final String DOMINIO_DEPTH;
+
+    public InputDomain(String dominio) {
+        this.DOMINIO_DEPTH = dominio;
+    }
 
     public static void main(String[] args) {
-        String domain = "https://ifc.edu.br"; // Substitua pelo domínio do site que você deseja vasculhar
+        String domain = "ifc.edu.br"; // Substitua pelo domínio do site que você deseja vasculhar
         try {
-            List<String> listadepdf = InvetorDataSensetive(domain, 0);
+            InputDomain inputDomain = new InputDomain(domain);
+
+            List<String> listadepdf = inputDomain.InvetorDataSensetive(domain, 0);
             threadPool.shutdown();
+
             System.out.println("Total de arquivos encontrados: " + listadepdf.size());
             for (String content : listadepdf) {
                 System.out.println("Arquivo encontrado: " + content);
@@ -45,7 +52,7 @@ public class InputDomain implements ValidateDataFormat {
         }
     }
 
-    private static List<String> FounderPDF(String domain, int depth) throws UnsupportedEncodingException, InterruptedException {
+    private List<String> FounderPDF(String domain, int depth) throws UnsupportedEncodingException, InterruptedException {
         if (depth > MAX_DEPTH || !visitedUrls.add(domain)) {
             return Collections.emptyList();
         }
@@ -78,7 +85,7 @@ public class InputDomain implements ValidateDataFormat {
                             System.out.println("AGAREF:"+href);
                             visitedArchives.add(href);
                         }
-                    } else if (href.contains(DOMINIO_DEPTH)/*href.startsWith(url)*/) {
+                    } else if (href.contains(this.DOMINIO_DEPTH)) {
                         FounderPDF(href, depth + 1);
                     }
                 }
@@ -92,7 +99,9 @@ public class InputDomain implements ValidateDataFormat {
         return new ArrayList<>(visitedArchives);
     }
 
-    private static List<String> InvetorDataSensetive(String domain, int depth) throws UnsupportedEncodingException, InterruptedException {
+    private List<String> InvetorDataSensetive(String domain, int depth) throws UnsupportedEncodingException, InterruptedException {
+        if (!domain.startsWith("https://") || !domain.startsWith("http://")) domain = "https://" + domain;
+
         List<String> processarArquivos = FounderPDF(domain, depth);
         List<String> dadosColetados = Collections.synchronizedList(new ArrayList<>());
 

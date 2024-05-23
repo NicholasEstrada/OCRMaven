@@ -1,7 +1,10 @@
 package JavaTCC.OCRMaven;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 
 /*
@@ -10,22 +13,21 @@ import java.util.regex.Pattern;
 public interface DataInspector extends ValidateDataFormat {
 
     static String procuraEmail(String result, int inicio) {
-        String email = "";
+        List<String> emails = new ArrayList<>();
         Pattern pattern = Pattern.compile("\\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}\\b");
         Matcher matcher = pattern.matcher(result.substring(inicio));
 
-        if (matcher.find()) {
-            email = matcher.group();
-            int nextIndex = inicio + matcher.start() + email.length();
-            if (nextIndex < result.length()) {
-                String nextEmail = procuraEmail(result, nextIndex);
-                if (!nextEmail.isEmpty()) {
-                    email += ";" + nextEmail;
-                }
-            }
+        while (matcher.find()) {
+            String email = matcher.group();
+            emails.add(email);
+            inicio += matcher.end(); // Move the starting point for the next search
+            matcher = pattern.matcher(result.substring(inicio));
         }
 
-        return email;
+        // Concatenate emails with the desired format
+        return emails.stream()
+                .map(e -> "e-mail:" + e)
+                .collect(Collectors.joining(","));
     }
 
     static String procuraCPF(String result, int inicio) {
@@ -45,7 +47,7 @@ public interface DataInspector extends ValidateDataFormat {
             String matchCPF = FounderRecursiveCPF(regexes[i], result, inicio);
             if (matchCPF != null && !matchCPF.isEmpty()) {
                 if (!cpfs_achados.isEmpty()) {
-                    cpfs_achados.append(";");
+                    cpfs_achados.append(",");
                 }
                 cpfs_achados.append(matchCPF);
             }
@@ -73,9 +75,9 @@ public interface DataInspector extends ValidateDataFormat {
                 }
 
                 if (hasMatch) {
-                    result.append(";");
+                    if(!cpf.isEmpty()) result.append(",");
                 }
-                result.append(cpf);
+                if(!cpf.isEmpty()) result.append("CPF:").append(cpf);
 
                 inicio = matcher.end();
                 hasMatch = true;
